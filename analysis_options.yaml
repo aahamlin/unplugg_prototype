@@ -1,0 +1,7 @@
+# Recommended setup of sqflite plugin.
+# https://github.com/tekartik/sqflite/blob/master/sqflite/doc/troubleshooting.md
+analyzer:
+  strong-mode:
+    # debugging tips above recommend not allowing implicit casts, however the
+    # provider/helper pattern uses Map<String, dynamic>
+    implicit-casts: true
