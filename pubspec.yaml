@@ -20,17 +20,19 @@ dependencies:
   flutter:
     sdk: flutter
 
+  sqflite: 1.1.6
+  path_provider: any
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
 
-  sqflite: 1.1.6
-  path_provider: any
-
 dev_dependencies:
+  test:
   flutter_test:
     sdk: flutter
 
+  mockito: ^4.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec

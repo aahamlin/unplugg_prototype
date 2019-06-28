@@ -7,9 +7,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 final String tableUnpluggEvent = "unplugg_event";
+final String tableUnpluggSession = "unplugg_session";
+
 final String columnId = "_id";
+
 final String columnEventType = "event_type";
 final String columnTimestamp = "event_timestamp";
+
+final String columnStartTime = "session_start_time";
+//final String columnEndTime = "session_end_time";
+final String columnDuration = "session_duration";
 
 class UnpluggEvent {
 
@@ -41,6 +48,40 @@ class UnpluggEvent {
   }
 }
 
+class UnpluggSession {
+
+  int id;
+  DateTime startTime;
+  //DateTime endTime;
+  Duration duration;
+
+  Map<String, dynamic> toMap() {
+    var map = <String, dynamic>{
+      columnDuration: duration.inMilliseconds,
+      columnStartTime: startTime.millisecondsSinceEpoch,
+      //columnEndTime: endTime != null ? endTime.millisecondsSinceEpoch : 0,
+    };
+    if (id != null) {
+      map[columnId] = id;
+    }
+    return map;
+  }
+
+  UnpluggSession({
+    this.id,
+    this.startTime,
+    //this.endTime,
+    this.duration
+  });
+
+  UnpluggSession.fromMap(Map<String, dynamic> map) {
+    id = map[columnId];
+    duration = new Duration(milliseconds: map[columnDuration]);
+    startTime = DateTime.fromMillisecondsSinceEpoch(map[columnStartTime]);
+    //endTime = map[columnEndTime] > 0 ? DateTime.fromMillisecondsSinceEpoch(map[columnEndTime]) : null;
+  }
+}
+
 class UnpluggEventProvider {
   UnpluggEventProvider._();
 
@@ -57,17 +98,30 @@ class UnpluggEventProvider {
   }
 
   initDb() async {
+    print ("initializing db");
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "unplugg_prototype.db");
     return await openDatabase(path,
       version: 1,
-      onOpen: (db) {},
+      onOpen: (db) async {
+      await db.execute('''
+create table if not exists $tableUnpluggSession (
+  $columnId integer primary key autoincrement,
+  $columnStartTime integer not null,
+  $columnDuration integer not null);
+''');
+      },
       onCreate: (Database db, int version) async {
         await db.execute('''
 create table $tableUnpluggEvent ( 
   $columnId integer primary key autoincrement, 
   $columnEventType text not null,
-  $columnTimestamp integer not null)
+  $columnTimestamp integer not null);
+  
+create table $tableUnpluggSession (
+  $columnId integer primary key autoincrement,
+  $columnStartTime integer not null,
+  $columnDuration integer not null);
 ''');
       });
   }
@@ -116,15 +170,47 @@ create table $tableUnpluggEvent (
   /**
    * delete all events
    */
-  Future<int> deleteAll() async {
+  Future<int> deleteAllEvents() async {
     final db = await database;
     return db.rawDelete('delete * from $tableUnpluggEvent');
   }
 
   /**
+   * create new session
+   */
+  Future<UnpluggSession> newUnpluggSession(UnpluggSession session) async {
+    final db = await database;
+    session.id = await db.insert(tableUnpluggSession, session.toMap());
+    return session;
+  }
+
+  /**
+   * get most current session
+   */
+  Future<UnpluggSession> getUnpluggSession() async {
+    final db = await database;
+    var table = await db.rawQuery("SELECT MAX($columnId) as id FROM $tableUnpluggSession");
+    int id = table.first["id"];
+    var res = await db.query(tableUnpluggSession,
+        columns: [columnId, columnStartTime, columnDuration],
+        where: '$columnId = ?',
+        whereArgs: [id]);
+    return res.isNotEmpty ? UnpluggSession.fromMap(res.first) : null;
+  }
+
+  Future<List<UnpluggSession>> getAllUnpluggSessions() async {
+    final db = await database;
+    print ("get all sessions");
+    var res = await db.query(tableUnpluggSession);
+    List<UnpluggSession> list = res.isNotEmpty ? res.map((e) => UnpluggSession.fromMap(e)).toList() : [];
+    print ("returning $list sessions");
+    return list;
+  }
+
+  /**
    * close the connection
    */
-  Future close() async {
+  close() async {
     final db = await database;
     db.close();
   }

@@ -37,15 +37,16 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  Widget _buildEventList(BuildContext context, AsyncSnapshot<List<UnpluggEvent>> snapshot) {
+  Widget _buildEventList(BuildContext context, AsyncSnapshot<List<UnpluggSession>> snapshot) {
     if (snapshot.hasData) {
       return ListView.builder(
         itemCount: snapshot.data.length,
         itemBuilder: (BuildContext context, int index) {
-          UnpluggEvent ue = snapshot.data[index];
+          UnpluggSession session = snapshot.data[index];
+          int minutes = session.duration.inMinutes;
           return ListTile(
-            title: Text(ue.eventType),
-            subtitle: Text(ue.timeStamp.toIso8601String()),
+            title: Text("Session $minutes minutes"),
+            subtitle: Text("Started: " + session.startTime.toIso8601String()),
           );
         });
     }
@@ -68,17 +69,17 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: FutureBuilder<List<UnpluggEvent>>(
-          future: UnpluggEventProvider.db.getAllUnpluggEvents(),
+      body: FutureBuilder<List<UnpluggSession>>(
+          future: UnpluggEventProvider.db.getAllUnpluggSessions(),
           builder: _buildEventList),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add event',
         child: Icon(Icons.add),
         onPressed: () async {
-          UnpluggEvent ue = UnpluggEvent(
-            eventType: "lock",
-            timeStamp: DateTime.now());
-          await UnpluggEventProvider.db.newUnpluggEvent(ue);
+          UnpluggSession session = UnpluggSession(
+            duration: new Duration(milliseconds: 60*60*1000),
+            startTime: DateTime.now());
+          await UnpluggEventProvider.db.newUnpluggSession(session);
           setState(() {});
         },
       ), // This trailing comma makes auto-formatting nicer for build methods.
