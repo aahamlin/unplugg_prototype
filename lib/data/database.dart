@@ -82,10 +82,10 @@ class UnpluggSession {
   }
 }
 
-class UnpluggEventProvider {
-  UnpluggEventProvider._();
+class DBProvider {
+  DBProvider._();
 
-  static final UnpluggEventProvider db = UnpluggEventProvider._();
+  static final DBProvider db = DBProvider._();
 
   static Database _database;
 
@@ -184,6 +184,13 @@ create table $tableUnpluggSession (
     return session;
   }
 
+  Future<int> deleteUnpluggSession(int id) async {
+    final db = await database;
+    return db.delete(tableUnpluggSession,
+      where: '$columnId = ?',
+      whereArgs: [id]);
+  }
+
   /**
    * get most current session
    */
@@ -200,10 +207,8 @@ create table $tableUnpluggSession (
 
   Future<List<UnpluggSession>> getAllUnpluggSessions() async {
     final db = await database;
-    print ("get all sessions");
     var res = await db.query(tableUnpluggSession);
     List<UnpluggSession> list = res.isNotEmpty ? res.map((e) => UnpluggSession.fromMap(e)).toList() : [];
-    print ("returning $list sessions");
     return list;
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:unplugg_prototype/data/unplugg_event.dart';
+import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
+import 'package:unplugg_prototype/data/blocs/session_bloc.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +14,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: MyHomePage(title: 'Unplugg'),
+      home: BlocProvider(
+        bloc: SessionBloc(),
+        child: MyHomePage(title: 'Unplugg'),
+      )
     );
   }
 }
@@ -37,6 +42,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  SessionBloc _sessionBloc;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _sessionBloc = BlocProvider.of<SessionBloc>(context);
+  }
+
   Widget _buildEventList(BuildContext context, AsyncSnapshot<List<UnpluggSession>> snapshot) {
     if (snapshot.hasData) {
       return ListView.builder(
@@ -44,9 +58,17 @@ class _MyHomePageState extends State<MyHomePage> {
         itemBuilder: (BuildContext context, int index) {
           UnpluggSession session = snapshot.data[index];
           int minutes = session.duration.inMinutes;
-          return ListTile(
+
+          return Dismissible(
+            key: UniqueKey(),
+            background: Container(color: Colors.red),
+            onDismissed: (direction) async {
+              await _sessionBloc.delete(session.id);
+            },
+            child: ListTile(
             title: Text("Session $minutes minutes"),
             subtitle: Text("Started: " + session.startTime.toIso8601String()),
+            ),
           );
         });
     }
@@ -69,8 +91,9 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: FutureBuilder<List<UnpluggSession>>(
-          future: UnpluggEventProvider.db.getAllUnpluggSessions(),
+      body: StreamBuilder<List<UnpluggSession>>(
+          //future: DBProvider.db.getAllUnpluggSessions(),
+          stream: _sessionBloc.sessions,
           builder: _buildEventList),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add event',
@@ -79,8 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
           UnpluggSession session = UnpluggSession(
             duration: new Duration(milliseconds: 60*60*1000),
             startTime: DateTime.now());
-          await UnpluggEventProvider.db.newUnpluggSession(session);
-          setState(() {});
+          //await DBProvider.db.newUnpluggSession(session);
+          //setState(() {});
+          _sessionBloc.inAddSession.add(session);
         },
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
