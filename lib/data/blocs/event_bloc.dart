@@ -20,7 +20,7 @@ class EventBloc with WidgetsBindingObserver implements BlocBase {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _addWidgetEvent(state.toString());
+    newEvent(state.toString());
   }
 
   getEvents() async {
@@ -33,7 +33,7 @@ class EventBloc with WidgetsBindingObserver implements BlocBase {
     getEvents();
   }
 
-  _addWidgetEvent(String event_type) async {
+  newEvent(String event_type) async {
     UnpluggEvent event = UnpluggEvent(
       eventType: event_type,
       timeStamp: DateTime.now(),

@@ -48,8 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
   SessionBloc _sessionBloc;
   EventBloc _eventBloc;
 
-  static const platform =
-      const MethodChannel('unpluggyourself.com/protected_data');
+  static const _eventChannel =
+      const EventChannel('unpluggyourself.com/dp');
 
   @override
   void initState() {
@@ -58,20 +58,16 @@ class _MyHomePageState extends State<MyHomePage> {
     _sessionBloc = BlocProvider.of<SessionBloc>(context);
     _eventBloc = BlocProvider.of<EventBloc>(context);
     WidgetsBinding.instance.addObserver(_eventBloc);
-
-    platform.setMethodCallHandler(_handleMethod);
+    _eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);
   }
 
-  Future<void> _fireEventTest() async {
-    await platform.invokeMethod('fireMessage');
+  void _onEvent(Object event) {
+    print("notification event: " + event);
+    _eventBloc.newEvent(event.toString());
   }
 
-  Future<dynamic> _handleMethod(MethodCall call) async {
-    switch (call.method) {
-      case "message":
-        print("message received: " + call.arguments);
-        return new Future.value("");
-    }
+  void _onError(Object error) {
+    print("Event error: " + error);
   }
 
   @override
@@ -176,8 +172,6 @@ class _MyHomePageState extends State<MyHomePage> {
           //await DBProvider.db.newUnpluggSession(session);
           //setState(() {});
           _sessionBloc.newSession(session);
-
-          _fireEventTest();
         },
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );

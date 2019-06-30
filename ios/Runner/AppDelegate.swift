@@ -2,63 +2,85 @@ import UIKit
 import Flutter
 import os
 
+enum ChannelName {
+    static let dataProtection = "unpluggyourself.com/dp";
+}
+
+enum DataProtectionState {
+    static let locking = "locking"
+    static let unlocked = "unlocked"
+}
+
+
 @UIApplicationMain
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterStreamHandler {
     
-  override init() {
-    super.init()
+    private var eventSink : FlutterEventSink?
     
-    NotificationCenter.default.addObserver(self,
-                                           selector: #selector(self.onProtectedDataDidBecomeAvailable),
-                                           name: UIApplication.protectedDataDidBecomeAvailableNotification,
-                                           object: nil)
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+        ) -> Bool {
+        
+        GeneratedPluginRegistrant.register(with: self)
+        
+        guard let controller = window?.rootViewController as? FlutterViewController else {
+            fatalError("rootViewController is not type FlutterViewController")
+        }
+        
+        let dataProtectionChannel = FlutterEventChannel(name: ChannelName.dataProtection,
+                                                         binaryMessenger: controller)
+        dataProtectionChannel.setStreamHandler(self)
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
     
-    NotificationCenter.default.addObserver(self,
-                                           selector: #selector(self.onProtectedDataWillBecomeUnavailable),
-                                           name: UIApplication.protectedDataWillBecomeUnavailableNotification,
-                                           object: nil)
-  }
+    public func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
+        self.eventSink = eventSink
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(AppDelegate.onProtectedDataWillBecomeUnavailable),
+            name: UIApplication.protectedDataWillBecomeUnavailableNotification,
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(AppDelegate.onProtectedDataDidBecomeAvailable),
+            name: UIApplication.protectedDataDidBecomeAvailableNotification,
+            object: nil)
 
-  override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-
-    // register for trigger from app
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    let testChannel = FlutterMethodChannel(name: "unpluggyourself.com/protected_data",
-                                           binaryMessenger: controller)
-    testChannel.setMethodCallHandler({
-        [weak self] (call: FlutterMethodCall, result: FlutterResult) -> Void in
-        guard call.method == "fireMessage" else {
-            result(FlutterMethodNotImplemented)
+        return nil
+    }
+    
+    @objc private func onProtectedDataWillBecomeUnavailable(notification: Notification) {
+        let state = DataProtectionState.locking
+        sendDataProtectionState(state)
+    }
+    
+    @objc private func onProtectedDataDidBecomeAvailable(notification: Notification) {
+        let state = DataProtectionState.unlocked
+        sendDataProtectionState(state)
+    }
+    
+    private func sendDataProtectionState(_ state: String) {
+        guard let eventSink = eventSink else {
+            if #available(iOS 10.0, *) {
+                os_log("eventSink not initialized")
+            } else {
+                print("eventSink not initialized")
+            }
             return
         }
-        self?.fireMessage(result: result)
-    })
-    
-    GeneratedPluginRegistrant.register(with: self)
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-    
-    private func fireMessage(result: FlutterResult) {
-        let notification = Notification(name: UIApplication.protectedDataDidBecomeAvailableNotification)
-        self.onProtectedDataDidBecomeAvailable(notification: notification)
-        result(String("fire"))
+        if #available(iOS 10.0, *) {
+            os_log("sending %s", state)
+        } else {
+            print("sending %s", state)
+        }
+        eventSink(state)
     }
-
-  @objc func onProtectedDataDidBecomeAvailable(notification:Notification) {
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    let testChannel = FlutterMethodChannel(name: "unpluggyourself.com/protected_data",
-                                           binaryMessenger: controller)
-    testChannel.invokeMethod("message", arguments: "unlock")
-  }
-
-  @objc func onProtectedDataWillBecomeUnavailable(notification:Notification) {
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    let testChannel = FlutterMethodChannel(name: "unpluggyourself.com/protected_data",
-                                           binaryMessenger: controller)
-    testChannel.invokeMethod("message", arguments: "lock")
-  }
-
+    
+    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        NotificationCenter.default.removeObserver(self)
+        eventSink = nil
+        return nil
+    }
 }
