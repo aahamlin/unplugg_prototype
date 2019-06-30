@@ -10,7 +10,7 @@ class BlocProvider<T extends BlocBase> extends StatefulWidget {
     Key key,
     @required this.child,
     @required this.bloc,
-}) : super(key: key);
+  }) : super(key: key);
 
   final T bloc;
   final Widget child;
@@ -38,5 +38,4 @@ class _BlocProviderState<T> extends State<BlocProvider<BlocBase>> {
   Widget build(BuildContext context) {
     return widget.child;
   }
-
 }

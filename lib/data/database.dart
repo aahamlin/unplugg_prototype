@@ -19,7 +19,6 @@ final String columnStartTime = "session_start_time";
 final String columnDuration = "session_duration";
 
 class UnpluggEvent {
-
   int id;
   String eventType;
   DateTime timeStamp; // millisSinceEpoch
@@ -35,11 +34,7 @@ class UnpluggEvent {
     return map;
   }
 
-  UnpluggEvent({
-    this.id,
-    this.eventType,
-    this.timeStamp
-  });
+  UnpluggEvent({this.id, this.eventType, this.timeStamp});
 
   UnpluggEvent.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
@@ -49,9 +44,9 @@ class UnpluggEvent {
 }
 
 class UnpluggSession {
-
   int id;
   DateTime startTime;
+
   //DateTime endTime;
   Duration duration;
 
@@ -67,12 +62,11 @@ class UnpluggSession {
     return map;
   }
 
-  UnpluggSession({
-    this.id,
-    this.startTime,
-    //this.endTime,
-    this.duration
-  });
+  UnpluggSession(
+      {this.id,
+      this.startTime,
+      //this.endTime,
+      this.duration});
 
   UnpluggSession.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
@@ -90,29 +84,25 @@ class DBProvider {
   static Database _database;
 
   Future<Database> get database async {
-    if (_database != null)
-      return _database;
+    if (_database != null) return _database;
 
     _database = await initDb();
     return _database;
   }
 
   initDb() async {
-    print ("initializing db");
+    print("initializing db");
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "unplugg_prototype.db");
-    return await openDatabase(path,
-      version: 1,
-      onOpen: (db) async {
+    return await openDatabase(path, version: 1, onOpen: (db) async {
       await db.execute('''
 create table if not exists $tableUnpluggSession (
   $columnId integer primary key autoincrement,
   $columnStartTime integer not null,
   $columnDuration integer not null);
 ''');
-      },
-      onCreate: (Database db, int version) async {
-        await db.execute('''
+    }, onCreate: (Database db, int version) async {
+      await db.execute('''
 create table $tableUnpluggEvent ( 
   $columnId integer primary key autoincrement, 
   $columnEventType text not null,
@@ -123,7 +113,7 @@ create table $tableUnpluggSession (
   $columnStartTime integer not null,
   $columnDuration integer not null);
 ''');
-      });
+    });
   }
 
   /**
@@ -141,9 +131,9 @@ create table $tableUnpluggSession (
   Future<UnpluggEvent> getUnpluggEvent(int id) async {
     final db = await database;
     var res = await db.query(tableUnpluggEvent,
-      columns: [columnId, columnEventType, columnTimestamp],
-      where: '$columnId = ?',
-      whereArgs: [id]);
+        columns: [columnId, columnEventType, columnTimestamp],
+        where: '$columnId = ?',
+        whereArgs: [id]);
     return res.isNotEmpty ? UnpluggEvent.fromMap(res.first) : null;
   }
 
@@ -152,8 +142,10 @@ create table $tableUnpluggSession (
    */
   Future<List<UnpluggEvent>> getAllUnpluggEvents() async {
     final db = await database;
-    var res = await db.query(tableUnpluggEvent);
-    List<UnpluggEvent> list = res.isNotEmpty ? res.map((e) => UnpluggEvent.fromMap(e)).toList() : [];
+    var res =
+        await db.query(tableUnpluggEvent, orderBy: "$columnTimestamp DESC");
+    List<UnpluggEvent> list =
+        res.isNotEmpty ? res.map((e) => UnpluggEvent.fromMap(e)).toList() : [];
     return list;
   }
 
@@ -162,9 +154,8 @@ create table $tableUnpluggSession (
    */
   Future<int> deleteUnpluggEvent(int id) async {
     final db = await database;
-    return db.delete(tableUnpluggEvent,
-      where: '$columnId = ?',
-      whereArgs: [id]);
+    return db
+        .delete(tableUnpluggEvent, where: '$columnId = ?', whereArgs: [id]);
   }
 
   /**
@@ -186,9 +177,8 @@ create table $tableUnpluggSession (
 
   Future<int> deleteUnpluggSession(int id) async {
     final db = await database;
-    return db.delete(tableUnpluggSession,
-      where: '$columnId = ?',
-      whereArgs: [id]);
+    return db
+        .delete(tableUnpluggSession, where: '$columnId = ?', whereArgs: [id]);
   }
 
   /**
@@ -196,7 +186,8 @@ create table $tableUnpluggSession (
    */
   Future<UnpluggSession> getUnpluggSession() async {
     final db = await database;
-    var table = await db.rawQuery("SELECT MAX($columnId) as id FROM $tableUnpluggSession");
+    var table = await db
+        .rawQuery("SELECT MAX($columnId) as id FROM $tableUnpluggSession");
     int id = table.first["id"];
     var res = await db.query(tableUnpluggSession,
         columns: [columnId, columnStartTime, columnDuration],
@@ -207,8 +198,11 @@ create table $tableUnpluggSession (
 
   Future<List<UnpluggSession>> getAllUnpluggSessions() async {
     final db = await database;
-    var res = await db.query(tableUnpluggSession);
-    List<UnpluggSession> list = res.isNotEmpty ? res.map((e) => UnpluggSession.fromMap(e)).toList() : [];
+    var res =
+        await db.query(tableUnpluggSession, orderBy: "$columnStartTime DESC");
+    List<UnpluggSession> list = res.isNotEmpty
+        ? res.map((e) => UnpluggSession.fromMap(e)).toList()
+        : [];
     return list;
   }
 

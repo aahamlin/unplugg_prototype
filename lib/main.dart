@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
 import 'package:unplugg_prototype/data/blocs/session_bloc.dart';
+import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
 
 void main() => runApp(MyApp());
 
@@ -10,15 +13,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Unplugg Prototype',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: BlocProvider(
-        bloc: SessionBloc(),
-        child: MyHomePage(title: 'Unplugg'),
-      )
-    );
+        title: 'Unplugg Prototype',
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+        ),
+        home: BlocProvider(
+            bloc: SessionBloc(),
+            child: BlocProvider(
+              bloc: EventBloc(),
+              child: MyHomePage(title: 'Unplugg'),
+            )));
   }
 }
 
@@ -41,38 +45,89 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   SessionBloc _sessionBloc;
+  EventBloc _eventBloc;
+
+  static const platform =
+      const MethodChannel('unpluggyourself.com/protected_data');
 
   @override
   void initState() {
     super.initState();
-
+    // todo: as we add new providers, make use of the provider package MultiProvider
     _sessionBloc = BlocProvider.of<SessionBloc>(context);
+    _eventBloc = BlocProvider.of<EventBloc>(context);
+    WidgetsBinding.instance.addObserver(_eventBloc);
+
+    platform.setMethodCallHandler(_handleMethod);
   }
 
-  Widget _buildEventList(BuildContext context, AsyncSnapshot<List<UnpluggSession>> snapshot) {
+  Future<void> _fireEventTest() async {
+    await platform.invokeMethod('fireMessage');
+  }
+
+  Future<dynamic> _handleMethod(MethodCall call) async {
+    switch (call.method) {
+      case "message":
+        print("message received: " + call.arguments);
+        return new Future.value("");
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_eventBloc);
+    super.dispose();
+  }
+
+  Widget _buildSessionList(
+      BuildContext context, AsyncSnapshot<List<UnpluggSession>> snapshot) {
     if (snapshot.hasData) {
       return ListView.builder(
-        itemCount: snapshot.data.length,
-        itemBuilder: (BuildContext context, int index) {
-          UnpluggSession session = snapshot.data[index];
-          int minutes = session.duration.inMinutes;
+          itemCount: snapshot.data.length,
+          itemBuilder: (BuildContext context, int index) {
+            UnpluggSession session = snapshot.data[index];
+            int minutes = session.duration.inMinutes;
 
-          return Dismissible(
-            key: UniqueKey(),
-            background: Container(color: Colors.red),
-            onDismissed: (direction) async {
-              await _sessionBloc.delete(session.id);
-            },
-            child: ListTile(
-            title: Text("Session $minutes minutes"),
-            subtitle: Text("Started: " + session.startTime.toIso8601String()),
-            ),
-          );
-        });
+            return Dismissible(
+              key: UniqueKey(),
+              background: Container(color: Colors.red),
+              onDismissed: (direction) async {
+                await _sessionBloc.delete(session.id);
+              },
+              child: ListTile(
+                title: Text("Session $minutes minutes"),
+                subtitle:
+                    Text("Started: " + session.startTime.toIso8601String()),
+              ),
+            );
+          });
+    } else {
+      return Center(child: CircularProgressIndicator());
     }
-    else {
+  }
+
+  Widget _buildEventList(
+      BuildContext context, AsyncSnapshot<List<UnpluggEvent>> snapshot) {
+    if (snapshot.hasData) {
+      return ListView.builder(
+          itemCount: snapshot.data.length,
+          itemBuilder: (BuildContext context, int index) {
+            UnpluggEvent event = snapshot.data[index];
+            String event_type = event.eventType;
+            return Dismissible(
+              key: UniqueKey(),
+              background: Container(color: Colors.red),
+              onDismissed: (direction) async {
+                await _eventBloc.delete(event.id);
+              },
+              child: ListTile(
+                title: Text("$event_type triggered"),
+                subtitle: Text("at " + event.timeStamp.toIso8601String()),
+              ),
+            );
+          });
+    } else {
       return Center(child: CircularProgressIndicator());
     }
   }
@@ -85,26 +140,44 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+
+    // test fire an event
+    //_fireEventTest();
+
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: StreamBuilder<List<UnpluggSession>>(
+      body: Column(children: <Widget>[
+        Expanded(
+            child: StreamBuilder<List<UnpluggSession>>(
           //future: DBProvider.db.getAllUnpluggSessions(),
           stream: _sessionBloc.sessions,
-          builder: _buildEventList),
+          builder: _buildSessionList,
+        )),
+        Divider(
+          color: Colors.black87,
+        ),
+        Flexible(
+            child: StreamBuilder<List<UnpluggEvent>>(
+          stream: _eventBloc.events,
+          builder: _buildEventList,
+        )),
+      ]),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add event',
         child: Icon(Icons.add),
         onPressed: () async {
           UnpluggSession session = UnpluggSession(
-            duration: new Duration(milliseconds: 60*60*1000),
-            startTime: DateTime.now());
+              duration: new Duration(milliseconds: 60 * 60 * 1000),
+              startTime: DateTime.now());
           //await DBProvider.db.newUnpluggSession(session);
           //setState(() {});
-          _sessionBloc.inAddSession.add(session);
+          _sessionBloc.newSession(session);
+
+          _fireEventTest();
         },
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
