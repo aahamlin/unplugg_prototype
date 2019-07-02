@@ -18,7 +18,12 @@ final String columnStartTime = "session_start_time";
 //final String columnEndTime = "session_end_time";
 final String columnDuration = "session_duration";
 
-class UnpluggEvent {
+abstract class ModelBase {
+  Map<String, dynamic> toMap();
+  ModelBase.fromMap(Map<String, dynamic> map);
+}
+
+class EventModel implements ModelBase {
   int id;
   String eventType;
   DateTime timeStamp; // millisSinceEpoch
@@ -34,16 +39,16 @@ class UnpluggEvent {
     return map;
   }
 
-  UnpluggEvent({this.id, this.eventType, this.timeStamp});
+  EventModel({this.id, this.eventType, this.timeStamp});
 
-  UnpluggEvent.fromMap(Map<String, dynamic> map) {
+  EventModel.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
     eventType = map[columnEventType];
     timeStamp = DateTime.fromMillisecondsSinceEpoch(map[columnTimestamp]);
   }
 }
 
-class UnpluggSession {
+class SessionModel implements ModelBase {
   int id;
   DateTime startTime;
 
@@ -62,13 +67,13 @@ class UnpluggSession {
     return map;
   }
 
-  UnpluggSession(
+  SessionModel(
       {this.id,
       this.startTime,
       //this.endTime,
       this.duration});
 
-  UnpluggSession.fromMap(Map<String, dynamic> map) {
+  SessionModel.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
     duration = new Duration(milliseconds: map[columnDuration]);
     startTime = DateTime.fromMillisecondsSinceEpoch(map[columnStartTime]);
@@ -119,7 +124,7 @@ create table $tableUnpluggSession (
   /**
    * insert an event
    */
-  Future<UnpluggEvent> newUnpluggEvent(UnpluggEvent unpluggEvent) async {
+  Future<EventModel> newUnpluggEvent(EventModel unpluggEvent) async {
     final db = await database;
     unpluggEvent.id = await db.insert(tableUnpluggEvent, unpluggEvent.toMap());
     return unpluggEvent;
@@ -128,24 +133,24 @@ create table $tableUnpluggSession (
   /**
    * read an event by id
    */
-  Future<UnpluggEvent> getUnpluggEvent(int id) async {
+  Future<EventModel> getUnpluggEvent(int id) async {
     final db = await database;
     var res = await db.query(tableUnpluggEvent,
         columns: [columnId, columnEventType, columnTimestamp],
         where: '$columnId = ?',
         whereArgs: [id]);
-    return res.isNotEmpty ? UnpluggEvent.fromMap(res.first) : null;
+    return res.isNotEmpty ? EventModel.fromMap(res.first) : null;
   }
 
   /**
    * get all events
    */
-  Future<List<UnpluggEvent>> getAllUnpluggEvents() async {
+  Future<List<EventModel>> getAllUnpluggEvents() async {
     final db = await database;
     var res =
         await db.query(tableUnpluggEvent, orderBy: "$columnTimestamp DESC");
-    List<UnpluggEvent> list =
-        res.isNotEmpty ? res.map((e) => UnpluggEvent.fromMap(e)).toList() : [];
+    List<EventModel> list =
+        res.isNotEmpty ? res.map((e) => EventModel.fromMap(e)).toList() : [];
     return list;
   }
 
@@ -169,7 +174,7 @@ create table $tableUnpluggSession (
   /**
    * create new session
    */
-  Future<UnpluggSession> newUnpluggSession(UnpluggSession session) async {
+  Future<SessionModel> newUnpluggSession(SessionModel session) async {
     final db = await database;
     session.id = await db.insert(tableUnpluggSession, session.toMap());
     return session;
@@ -184,7 +189,7 @@ create table $tableUnpluggSession (
   /**
    * get most current session
    */
-  Future<UnpluggSession> getUnpluggSession() async {
+  Future<SessionModel> getUnpluggSession() async {
     final db = await database;
     var table = await db
         .rawQuery("SELECT MAX($columnId) as id FROM $tableUnpluggSession");
@@ -193,15 +198,15 @@ create table $tableUnpluggSession (
         columns: [columnId, columnStartTime, columnDuration],
         where: '$columnId = ?',
         whereArgs: [id]);
-    return res.isNotEmpty ? UnpluggSession.fromMap(res.first) : null;
+    return res.isNotEmpty ? SessionModel.fromMap(res.first) : null;
   }
 
-  Future<List<UnpluggSession>> getAllUnpluggSessions() async {
+  Future<List<SessionModel>> getAllUnpluggSessions() async {
     final db = await database;
     var res =
         await db.query(tableUnpluggSession, orderBy: "$columnStartTime DESC");
-    List<UnpluggSession> list = res.isNotEmpty
-        ? res.map((e) => UnpluggSession.fromMap(e)).toList()
+    List<SessionModel> list = res.isNotEmpty
+        ? res.map((e) => SessionModel.fromMap(e)).toList()
         : [];
     return list;
   }

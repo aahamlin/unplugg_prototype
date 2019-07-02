@@ -4,10 +4,10 @@ import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
 import 'package:unplugg_prototype/data/database.dart';
 
 class EventBloc with WidgetsBindingObserver implements BlocBase {
-  final _eventController = StreamController<List<UnpluggEvent>>.broadcast();
+  final _eventController = StreamController<List<EventModel>>.broadcast();
 
   // output stream
-  Stream<List<UnpluggEvent>> get events => _eventController.stream;
+  Stream<List<EventModel>> get events => _eventController.stream;
 
   EventBloc() {
     getEvents();
@@ -24,7 +24,7 @@ class EventBloc with WidgetsBindingObserver implements BlocBase {
   }
 
   getEvents() async {
-    List<UnpluggEvent> events = await DBProvider.db.getAllUnpluggEvents();
+    List<EventModel> events = await DBProvider.db.getAllUnpluggEvents();
     _eventController.sink.add(events);
   }
 
@@ -34,7 +34,7 @@ class EventBloc with WidgetsBindingObserver implements BlocBase {
   }
 
   newEvent(String event_type) async {
-    UnpluggEvent event = UnpluggEvent(
+    EventModel event = EventModel(
       eventType: event_type,
       timeStamp: DateTime.now(),
     );

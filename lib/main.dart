@@ -77,12 +77,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildSessionList(
-      BuildContext context, AsyncSnapshot<List<UnpluggSession>> snapshot) {
+      BuildContext context, AsyncSnapshot<List<SessionModel>> snapshot) {
     if (snapshot.hasData) {
       return ListView.builder(
           itemCount: snapshot.data.length,
           itemBuilder: (BuildContext context, int index) {
-            UnpluggSession session = snapshot.data[index];
+            SessionModel session = snapshot.data[index];
             int minutes = session.duration.inMinutes;
 
             return Dismissible(
@@ -104,12 +104,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildEventList(
-      BuildContext context, AsyncSnapshot<List<UnpluggEvent>> snapshot) {
+      BuildContext context, AsyncSnapshot<List<EventModel>> snapshot) {
     if (snapshot.hasData) {
       return ListView.builder(
           itemCount: snapshot.data.length,
           itemBuilder: (BuildContext context, int index) {
-            UnpluggEvent event = snapshot.data[index];
+            EventModel event = snapshot.data[index];
             String event_type = event.eventType;
             return Dismissible(
               key: UniqueKey(),
@@ -148,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Column(children: <Widget>[
         Expanded(
-            child: StreamBuilder<List<UnpluggSession>>(
+            child: StreamBuilder<List<SessionModel>>(
           //future: DBProvider.db.getAllUnpluggSessions(),
           stream: _sessionBloc.sessions,
           builder: _buildSessionList,
@@ -157,7 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
           color: Colors.black87,
         ),
         Flexible(
-            child: StreamBuilder<List<UnpluggEvent>>(
+            child: StreamBuilder<List<EventModel>>(
           stream: _eventBloc.events,
           builder: _buildEventList,
         )),
@@ -166,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Add event',
         child: Icon(Icons.add),
         onPressed: () async {
-          UnpluggSession session = UnpluggSession(
+          SessionModel session = SessionModel(
               duration: new Duration(milliseconds: 60 * 60 * 1000),
               startTime: DateTime.now());
           //await DBProvider.db.newUnpluggSession(session);
