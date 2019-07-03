@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:csv/csv.dart';
-import 'package:share/share.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
 
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/exporter.dart';
@@ -162,7 +164,8 @@ class _MyHomePageState extends State<MyHomePage> {
               return result;
               });
               var output = const ListToCsvConverter().convert(export);
-              Share.share(output);
+              await Share.file('Unplugg data', 'data.csv', Utf8Encoder().convert(output), 'text/csv',
+                  text: 'Here is the data captured as of ' + DateTime.now().toIso8601String());
             },
           ),
         ],
