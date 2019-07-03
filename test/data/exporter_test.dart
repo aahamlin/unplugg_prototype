@@ -9,16 +9,25 @@ import 'package:unplugg_prototype/data/exporter.dart';
 
 void main() {
 
-  List<List<dynamic>> exportResults;
   File tmpFile = File(p.join(Directory.systemTemp.path, "test.csv"));
+  List<List<dynamic>> exportResults;
+
+  const List<String> headers = ['id', 'eventType', 'timeStamp'];
 
   setUp(() {
     List<EventModel> events = List();
     events.add(EventModel(id: 1, timeStamp: DateTime.now(), eventType: 'locking'));
     events.add(EventModel(id: 2, timeStamp: DateTime.now(), eventType: 'unlocked'));
 
-    EventExporter eventsExporter = EventExporter();
-    exportResults = eventsExporter.toList(events);
+    //EventExporter eventsExporter = EventExporter();
+    //exportResults = eventsExporter.toList(events);
+    exportResults = modelToList<EventModel>(events, headers, (entry) {
+      List result = List();
+      result.add(entry.id);
+      result.add(entry.eventType);
+      result.add(entry.timeStamp);
+      return result;
+    });
   });
 
   tearDown(() {
@@ -29,7 +38,7 @@ void main() {
 
   test('EventsExporter.toList returns ordered entries', () {
     expect(exportResults.length, 3);
-    expect(exportResults[0], ['id', 'eventType', 'timeStamp']);
+    expect(exportResults[0], headers);
     expect(exportResults[1], orderedEquals([1, 'locking', isA<DateTime>()]));
     expect(exportResults[2], orderedEquals([2, 'unlocked', isA<DateTime>()]));
   });

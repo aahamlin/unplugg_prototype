@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:csv/csv.dart';
+import 'package:share/share.dart';
+
 import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/exporter.dart';
 import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
 import 'package:unplugg_prototype/data/blocs/session_bloc.dart';
 import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
@@ -145,6 +149,23 @@ class _MyHomePageState extends State<MyHomePage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () async {
+              final events = await DBProvider.db.getAllUnpluggEvents();
+              var export = modelToList(events, null, (event) {
+              List result = List();
+              result.add(event.id);
+              result.add(event.eventType);
+              result.add(event.timeStamp);
+              return result;
+              });
+              var output = const ListToCsvConverter().convert(export);
+              Share.share(output);
+            },
+          ),
+        ],
       ),
       body: Column(children: <Widget>[
         Expanded(

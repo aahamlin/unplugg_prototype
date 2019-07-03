@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+
 final String tableUnpluggEvent = "unplugg_event";
 final String tableUnpluggSession = "unplugg_session";
 
@@ -18,12 +19,8 @@ final String columnStartTime = "session_start_time";
 //final String columnEndTime = "session_end_time";
 final String columnDuration = "session_duration";
 
-abstract class ModelBase {
-  Map<String, dynamic> toMap();
-  ModelBase.fromMap(Map<String, dynamic> map);
-}
+class EventModel {
 
-class EventModel implements ModelBase {
   int id;
   String eventType;
   DateTime timeStamp; // millisSinceEpoch
@@ -48,7 +45,8 @@ class EventModel implements ModelBase {
   }
 }
 
-class SessionModel implements ModelBase {
+class SessionModel {
+
   int id;
   DateTime startTime;
 
