@@ -38,29 +38,30 @@ enum DataProtectionState {
         self.eventSink = eventSink
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(AppDelegate.onProtectedDataWillBecomeUnavailable),
-            name: UIApplication.protectedDataWillBecomeUnavailableNotification,
-            object: nil)
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(AppDelegate.onProtectedDataDidBecomeAvailable),
-            name: UIApplication.protectedDataDidBecomeAvailableNotification,
+            selector: #selector(onDidReceiveNotification),
+            name: nil,
             object: nil)
 
+        // Can I just hook 1 observer with a method to perform the selector?
+        // other events of interest:
+        // didEnterBackgroundNotification
+        // willEnterForegroundNotification
+        // willResignActiveNotification
+        // willTerminateNotification
+        sendDataProtectionState("stream initiated")
         return nil
     }
     
-    @objc private func onProtectedDataWillBecomeUnavailable(notification: Notification) {
-        let state = DataProtectionState.locking
-        sendDataProtectionState(state)
+    @objc private func onDidReceiveNotification(_ notification: Notification) {
+        switch (notification.name) {
+        case UIApplication.protectedDataWillBecomeUnavailableNotification:
+            sendDataProtectionState("locking");
+        case UIApplication.protectedDataDidBecomeAvailableNotification:
+            sendDataProtectionState("unlocked");
+        default:
+            sendDataProtectionState(notification.name.rawValue);
+        }
     }
-    
-    @objc private func onProtectedDataDidBecomeAvailable(notification: Notification) {
-        let state = DataProtectionState.unlocked
-        sendDataProtectionState(state)
-    }
-    
     private func sendDataProtectionState(_ state: String) {
         guard let eventSink = eventSink else {
             if #available(iOS 10.0, *) {
@@ -79,6 +80,7 @@ enum DataProtectionState {
     }
     
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        sendDataProtectionState("stream cancelled")
         NotificationCenter.default.removeObserver(self)
         eventSink = nil
         return nil

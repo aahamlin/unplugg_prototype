@@ -4,7 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 import 'package:csv/csv.dart';
 
-import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/models/event.dart';
 import 'package:unplugg_prototype/data/exporter.dart';
 
 void main() {
@@ -15,13 +15,13 @@ void main() {
   const List<String> headers = ['id', 'eventType', 'timeStamp'];
 
   setUp(() {
-    List<EventModel> events = List();
-    events.add(EventModel(id: 1, timeStamp: DateTime.now(), eventType: 'locking'));
-    events.add(EventModel(id: 2, timeStamp: DateTime.now(), eventType: 'unlocked'));
+    List<Event> events = List();
+    events.add(Event(id: 1, timeStamp: DateTime.now(), eventType: 'locking'));
+    events.add(Event(id: 2, timeStamp: DateTime.now(), eventType: 'unlocked'));
 
     //EventExporter eventsExporter = EventExporter();
     //exportResults = eventsExporter.toList(events);
-    exportResults = modelToList<EventModel>(events, headers, (entry) {
+    exportResults = modelToList<Event>(events, headers, (entry) {
       List result = List();
       result.add(entry.id);
       result.add(entry.eventType);

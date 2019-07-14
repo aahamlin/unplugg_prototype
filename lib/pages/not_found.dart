@@ -1,0 +1,23 @@
+import 'package:flutter/material.dart';
+
+class NotFoundPage extends StatefulWidget {
+  NotFoundPage({Key key, this.name}) : super(key: key);
+  final String name;
+
+  @override _NotFoundPageState createState() => _NotFoundPageState();
+}
+
+class _NotFoundPageState extends State<NotFoundPage> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text("Page not found."),
+            Text(widget.name),
+          ],
+        ));
+  }
+}

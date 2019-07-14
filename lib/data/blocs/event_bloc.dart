@@ -1,30 +1,45 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
-import 'package:unplugg_prototype/data/database.dart';
 
-class EventBloc with WidgetsBindingObserver implements BlocBase {
-  final _eventController = StreamController<List<EventModel>>.broadcast();
+import './bloc_provider.dart';
+import '../database.dart';
+import '../models/event.dart';
+
+class EventBloc implements BlocBase {
+  final _eventController = StreamController<List<Event>>.broadcast();
 
   // output stream
-  Stream<List<EventModel>> get events => _eventController.stream;
+  Stream<List<Event>> get events => _eventController.stream;
 
   EventBloc() {
-    getEvents();
+    //getEvents();
   }
 
   @override
   void dispose() {
+    print('event bloc dispose');
     _eventController.close();
   }
 
-  @override
+/*  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     newEvent(state.toString());
+    print('print ' + state.toString());
+    debugPrint('debugPrint ' + state.toString());
+    log('log ' + state.toString());
+//    // todo: put in main.dart, probably?
+//    if (state == AppLifecycleState.paused) {
+//      DBProvider.db.close();
+//      print("app paused, closed db");
+//    }
   }
+*/
 
   getEvents() async {
-    List<EventModel> events = await DBProvider.db.getAllUnpluggEvents();
+    print('event bloc calling for all events');
+    List<Event> events = await DBProvider.db.getAllUnpluggEvents();
+    print('event bloc adding ${events.length} events to sink');
     _eventController.sink.add(events);
   }
 
@@ -34,7 +49,7 @@ class EventBloc with WidgetsBindingObserver implements BlocBase {
   }
 
   newEvent(String event_type) async {
-    EventModel event = EventModel(
+    Event event = Event(
       eventType: event_type,
       timeStamp: DateTime.now(),
     );
