@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:unplugg_prototype/blocs/event_bloc.dart';
 
 import 'package:unplugg_prototype/pages/home.dart';
 import 'package:unplugg_prototype/pages/session.dart';
@@ -8,7 +10,7 @@ class Router {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch(settings.name) {
       case '/':
-        return MaterialPageRoute(builder: (context) => HomePage(title: 'Unplugg'));
+        return MaterialPageRoute(builder: (context) => HomePage(title: 'Unplugg', eventBloc: Provider.of<EventBloc>(context)));
       case '/session':
         return MaterialPageRoute(builder: (context) => SessionPage());
       default:

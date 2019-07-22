@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
-import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
+import 'package:unplugg_prototype/blocs/bloc_provider.dart';
+import 'package:unplugg_prototype/blocs/event_bloc.dart';
 import 'package:unplugg_prototype/data/models/event.dart';
 
 class EventsTab extends StatelessWidget {

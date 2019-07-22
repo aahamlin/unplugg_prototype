@@ -144,7 +144,7 @@ create table $tableUnpluggSession (
    */
   Future<int> deleteAllEvents() async {
     final db = await database;
-    return db.rawDelete('delete * from $tableUnpluggEvent');
+    return db.rawDelete('DELETE FROM "$tableUnpluggEvent"; VACUUM;');
   }
 
   /**
@@ -167,6 +167,11 @@ create table $tableUnpluggSession (
     final db = await database;
     return db
         .delete(tableUnpluggSession, where: '$columnSessionId = ?', whereArgs: [id]);
+  }
+
+  Future<int> deleteAllSessions() async {
+    final db = await database;
+    return db.rawDelete('DELETE FROM "$tableUnpluggSession"; VACUUM;');
   }
 
   Future<Session> getUnpluggSession(int id) async {

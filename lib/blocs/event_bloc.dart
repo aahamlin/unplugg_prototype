@@ -3,21 +3,17 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import './bloc_provider.dart';
-import '../database.dart';
-import '../models/event.dart';
+import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/models/event.dart';
 
 class EventBloc implements BlocBase {
   final _eventController = StreamController<List<Event>>.broadcast();
-  //final StreamController<List<Event>> _eventController;
-
   // output stream
   Stream<List<Event>> get events => _eventController.stream;
 
   final DBProvider _db;
 
-  EventBloc(this._db/*this._eventController*/) {
-    //getEvents();
-    print('constructing EventBloc with ${_eventController.toString()}');
+  EventBloc(this._db) {
   }
 
   @override
@@ -54,6 +50,11 @@ class EventBloc implements BlocBase {
     getEvents();
   }
 
+  deleteAll() async {
+    _db.deleteAllEvents();
+    getEvents();
+  }
+
   newEvent(String event_type) async {
     Event event = Event(
       eventType: event_type,
@@ -63,26 +64,5 @@ class EventBloc implements BlocBase {
     _db.newUnpluggEvent(event);
     getEvents();
   }
-/*
-  _handleNewEvent(String event_type) {
-    UnpluggEvent event = UnpluggEvent(
-      eventType: event_type,
-      timeStamp: DateTime.now(),
-    );
 
-    DBProvider.db.newUnpluggEvent(event);
-    print("platform event_type: $event_type");
-    getEvents();
-  }
-
-  _handleError(e) {
-    UnpluggEvent event = UnpluggEvent(
-      eventType: "error",
-      timeStamp: DateTime.now(),
-    );
-    DBProvider.db.newUnpluggEvent(event);
-    print("platform error: $e");
-    return "error";
-  }
-  */
 }

@@ -48,21 +48,31 @@ enum DataProtectionState {
         // willEnterForegroundNotification
         // willResignActiveNotification
         // willTerminateNotification
-        sendDataProtectionState("stream initiated")
+        sendPhoneEventState("stream initiated")
         return nil
     }
+    
+    let FlutterSemanticsUpdate = Notification.Name(rawValue: "FlutterSemanticsUpdate")
     
     @objc private func onDidReceiveNotification(_ notification: Notification) {
         switch (notification.name) {
         case UIApplication.protectedDataWillBecomeUnavailableNotification:
-            sendDataProtectionState("locking");
+            sendPhoneEventState("locking");
         case UIApplication.protectedDataDidBecomeAvailableNotification:
-            sendDataProtectionState("unlocked");
+            sendPhoneEventState("unlocked");
+        case FlutterSemanticsUpdate:
+            break;
         default:
-            sendDataProtectionState(notification.name.rawValue);
+            if (notification.name.rawValue.starts(with: "UIStatusBar") ||
+                notification.name.rawValue.starts(with: "_UI") ||
+                notification.name.rawValue.starts(with: "UIApplicationScene") ||
+                notification.name.rawValue.starts(with: "UIDeviceOrientation")) {
+                break;
+            }
+            sendPhoneEventState(notification.name.rawValue);
         }
     }
-    private func sendDataProtectionState(_ state: String) {
+    private func sendPhoneEventState(_ state: String) {
         guard let eventSink = eventSink else {
             if #available(iOS 10.0, *) {
                 os_log("eventSink not initialized")
@@ -80,7 +90,7 @@ enum DataProtectionState {
     }
     
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        sendDataProtectionState("stream cancelled")
+        sendPhoneEventState("stream cancelled")
         NotificationCenter.default.removeObserver(self)
         eventSink = nil
         return nil

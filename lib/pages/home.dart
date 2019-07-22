@@ -1,27 +1,38 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
-import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
-import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
-import 'package:unplugg_prototype/data/blocs/session_bloc.dart';
+import 'package:csv/csv.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
+import 'package:provider/provider.dart';
+
+import 'package:unplugg_prototype/services/phone_event_observer.dart';
+
+import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/exporter.dart';
+
+import 'package:unplugg_prototype/blocs/bloc_provider.dart';
+import 'package:unplugg_prototype/blocs/event_bloc.dart';
+import 'package:unplugg_prototype/blocs/session_bloc.dart';
 
 import 'package:unplugg_prototype/pages/home/events_tab.dart';
 import 'package:unplugg_prototype/pages/home/sessions_tab.dart';
 import 'package:unplugg_prototype/pages/home/action_tab.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key, this.title}) : super(key: key);
+  HomePage({Key key, @required this.title, @required this.eventBloc}) : super(key: key);
   final String title;
+  final EventBloc eventBloc;
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver, PhoneEventObserver {
 
   int _selectedIndex = 1;
 
   //EventBloc _eventBloc = EventBloc();
-  SessionBloc _sessionBloc = SessionBloc();
+  //SessionBloc _sessionBloc = SessionBloc();
 
   static const TextStyle _optionStyle = TextStyle(fontWeight: FontWeight.bold);
 
@@ -37,38 +48,90 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print(state.toString());
-    //_eventBloc.newEvent(state.toString());
-  }
-
   @override void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    PhoneEventService.instance.addObserver(this);
+    print('home page initialized');
   }
 
   @override void dispose() {
-    print('home page dispose');
+    print('home page disposing');
     WidgetsBinding.instance.removeObserver(this);
-    //_eventBloc.dispose();
+    PhoneEventService.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print('widget binding state: ${state.toString()}');
+    widget.eventBloc.newEvent(state.toString());
+  }
+
+  @override
+  void onPhoneEvent(String event) {
+    print('phone event: ${event}');
+    widget.eventBloc.newEvent(event);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final DBProvider db = Provider.of<DBProvider>(context);
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.title)
+        title: Text(widget.title),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () async {
+              final events = await db.getAllUnpluggEvents();
+              var export = modelToList(events, null, (event) {
+                List result = List();
+                result.add(event.id);
+                result.add(event.eventType);
+                result.add(event.timeStamp);
+                return result;
+              });
+              var output = const ListToCsvConverter().convert(export);
+              await Share.file('Unplugg data', 'data.csv', Utf8Encoder().convert(output), 'text/csv',
+                  text: 'Data as of ' + DateTime.now().toIso8601String());
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.clear_all),
+            onPressed: () async {
+              return showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Delete All Events?'),
+                    content: const Text('This operation is permanent and cannot be undone.'),
+                    actions: <Widget>[
+                      FlatButton(
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Cancel')
+                      ),
+                      FlatButton(
+                        onPressed: () async {
+                          Provider.of<EventBloc>(context).deleteAll();
+                          Provider.of<SessionBloc>(context).deleteAll();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Ok'),
+                      )
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
-      body: BlocProvider(
-        /*bloc: _eventBloc,
-        child: BlocProvider(*/
-          bloc: _sessionBloc,
-          child: Center(
-            child: _widgetOptions.elementAt(_selectedIndex),
-          ),/*
-        ),*/
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[

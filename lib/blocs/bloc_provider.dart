@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
 // todo: look into the bloc package
 abstract class BlocBase {
   void dispose();
 }
 
-class BlocProvider<T extends BlocBase> extends StatefulWidget {
+/*class BlocProvider<T extends BlocBase> extends StatefulWidget {
   BlocProvider({
     Key key,
     @required this.child,
@@ -39,4 +37,4 @@ class _BlocProviderState<T> extends State<BlocProvider<BlocBase>> {
   Widget build(BuildContext context) {
     return widget.child;
   }
-}
+}*/

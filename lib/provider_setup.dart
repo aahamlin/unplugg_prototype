@@ -2,9 +2,8 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 
 import 'package:unplugg_prototype/data/database.dart';
-
-import 'package:unplugg_prototype/data/models/event.dart';
-import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
+import 'package:unplugg_prototype/blocs/event_bloc.dart';
+import 'package:unplugg_prototype/blocs/session_bloc.dart';
 
 List<SingleChildCloneableWidget> providers = [
   ..._independentServices,
@@ -14,17 +13,15 @@ List<SingleChildCloneableWidget> providers = [
 
 
 List<SingleChildCloneableWidget> _independentServices = [
-
   Provider.value(value: DBProvider.db),
-
-  //StreamProvider<List<Event>>.controller(builder: (_) => StreamController<List<Event>>()),
-
-
 ];
 
 List<SingleChildCloneableWidget> _dependentServices = [
   ProxyProvider<DBProvider, EventBloc>(
     builder: (context, db, _) => EventBloc(db),
+  ),
+  ProxyProvider<DBProvider, SessionBloc>(
+    builder: (context, db, _) => SessionBloc(db),
   )
 ];
 

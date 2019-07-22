@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
-import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
-import 'package:unplugg_prototype/data/blocs/session_bloc.dart';
+import 'package:unplugg_prototype/blocs/bloc_provider.dart';
+import 'package:provider/provider.dart';
+
+import 'package:unplugg_prototype/blocs/session_bloc.dart';
 import 'package:unplugg_prototype/data/models/session.dart';
 
 class SessionsTab extends StatelessWidget {
-  /*static const _eventChannel = const EventChannel('unpluggyourself.com/dp');*/
-  /*_eventChannel.receiveBroadcastStream().listen(_onEvent, onError: _onError);*/
 
   @override
   Widget build(BuildContext context) {
 
     print('session tab build triggered');
-    SessionBloc sessionBloc = BlocProvider.of<SessionBloc>(context);
+    //SessionBloc sessionBloc = BlocProvider.of<SessionBloc>(context);
+    SessionBloc sessionBloc = Provider.of<SessionBloc>(context);
     sessionBloc.getSessions();
 
     return StreamBuilder<List<Session>>(
