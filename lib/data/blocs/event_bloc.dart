@@ -8,12 +8,16 @@ import '../models/event.dart';
 
 class EventBloc implements BlocBase {
   final _eventController = StreamController<List<Event>>.broadcast();
+  //final StreamController<List<Event>> _eventController;
 
   // output stream
   Stream<List<Event>> get events => _eventController.stream;
 
-  EventBloc() {
+  final DBProvider _db;
+
+  EventBloc(this._db/*this._eventController*/) {
     //getEvents();
+    print('constructing EventBloc with ${_eventController.toString()}');
   }
 
   @override
@@ -38,13 +42,15 @@ class EventBloc implements BlocBase {
 
   getEvents() async {
     print('event bloc calling for all events');
-    List<Event> events = await DBProvider.db.getAllUnpluggEvents();
+    //List<Event> events = await DBProvider.db.getAllUnpluggEvents();
+    List<Event> events = await _db.getAllUnpluggEvents();
     print('event bloc adding ${events.length} events to sink');
     _eventController.sink.add(events);
   }
 
   delete(int id) async {
-    DBProvider.db.deleteUnpluggEvent(id);
+    //DBProvider.db.deleteUnpluggEvent(id);
+    _db.deleteUnpluggEvent(id);
     getEvents();
   }
 
@@ -53,7 +59,8 @@ class EventBloc implements BlocBase {
       eventType: event_type,
       timeStamp: DateTime.now(),
     );
-    DBProvider.db.newUnpluggEvent(event);
+    //DBProvider.db.newUnpluggEvent(event);
+    _db.newUnpluggEvent(event);
     getEvents();
   }
 /*

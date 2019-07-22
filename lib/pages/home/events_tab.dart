@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
 import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
 import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
 import 'package:unplugg_prototype/data/models/event.dart';
@@ -10,11 +12,14 @@ class EventsTab extends StatelessWidget {
   Widget build(BuildContext context) {
 
     print('event tab build triggered');
-    EventBloc eventBloc = BlocProvider.of<EventBloc>(context);
+    //EventBloc eventBloc = BlocProvider.of<EventBloc>(context);
+    EventBloc eventBloc = Provider.of(context);
     eventBloc.getEvents();
+
 
     return StreamBuilder<List<Event>>(
         stream: eventBloc.events,
+        //stream: Provider.of<List<Event>>(context),
         //initialData: List<Event>.from([Event(eventType: "No events", timeStamp: DateTime.now())]),
         builder: (context, snapshot) {
           if (snapshot.hasData) {

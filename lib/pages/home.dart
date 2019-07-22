@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   int _selectedIndex = 1;
 
-  EventBloc _eventBloc = EventBloc();
+  //EventBloc _eventBloc = EventBloc();
   SessionBloc _sessionBloc = SessionBloc();
 
   static const TextStyle _optionStyle = TextStyle(fontWeight: FontWeight.bold);
@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     print(state.toString());
-    _eventBloc.newEvent(state.toString());
+    //_eventBloc.newEvent(state.toString());
   }
 
   @override void initState() {
@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override void dispose() {
     print('home page dispose');
     WidgetsBinding.instance.removeObserver(this);
-    _eventBloc.dispose();
+    //_eventBloc.dispose();
     super.dispose();
   }
 
@@ -62,13 +62,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           title: Text(widget.title)
       ),
       body: BlocProvider(
-        bloc: _eventBloc,
-        child: BlocProvider(
+        /*bloc: _eventBloc,
+        child: BlocProvider(*/
           bloc: _sessionBloc,
           child: Center(
             child: _widgetOptions.elementAt(_selectedIndex),
-          ),
-        ),
+          ),/*
+        ),*/
       ),
       bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
