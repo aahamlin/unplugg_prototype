@@ -66,7 +66,8 @@ enum DataProtectionState {
             if (notification.name.rawValue.starts(with: "UIStatusBar") ||
                 notification.name.rawValue.starts(with: "_UI") ||
                 notification.name.rawValue.starts(with: "UIApplicationScene") ||
-                notification.name.rawValue.starts(with: "UIDeviceOrientation")) {
+                notification.name.rawValue.starts(with: "UIDeviceOrientation") ||
+                notification.name.rawValue.starts(with: "UIScreenBrightness")) {
                 break;
             }
             sendPhoneEventState(notification.name.rawValue);
