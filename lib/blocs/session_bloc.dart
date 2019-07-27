@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import './bloc_provider.dart';
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models/session.dart';

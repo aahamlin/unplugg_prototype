@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 
@@ -7,7 +5,7 @@ class PhoneEventService {
 
   static final PhoneEventService instance = new PhoneEventService._();
 
-  final _eventChannel = EventChannel('unpluggyourself.com/dp');
+  final _eventChannel = EventChannel('unpluggyourself.com/phone_event');
 
   final List<PhoneEventObserver> _observers = List<PhoneEventObserver>();
 

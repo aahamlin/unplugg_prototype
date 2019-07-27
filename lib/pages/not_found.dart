@@ -15,8 +15,8 @@ class _NotFoundPageState extends State<NotFoundPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text("Page not found."),
-            Text(widget.name),
+            Text('Page not found', style: Theme.of(context).textTheme.title),
+            Text(widget.name, style: Theme.of(context).textTheme.subtitle),
           ],
         ));
   }

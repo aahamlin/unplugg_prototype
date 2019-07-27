@@ -5,41 +5,32 @@ import 'package:csv/csv.dart';
 import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:provider/provider.dart';
 
-import 'package:unplugg_prototype/services/phone_event_observer.dart';
-
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/exporter.dart';
 
-import 'package:unplugg_prototype/blocs/bloc_provider.dart';
-import 'package:unplugg_prototype/blocs/event_bloc.dart';
 import 'package:unplugg_prototype/blocs/session_bloc.dart';
 
-import 'package:unplugg_prototype/pages/home/events_tab.dart';
 import 'package:unplugg_prototype/pages/home/sessions_tab.dart';
 import 'package:unplugg_prototype/pages/home/action_tab.dart';
+import 'package:unplugg_prototype/pages/home/user_tab.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key, @required this.title, @required this.eventBloc}) : super(key: key);
-  final String title;
-  final EventBloc eventBloc;
+  HomePage({Key key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver, PhoneEventObserver {
+class _HomePageState extends State<HomePage> {
 
   int _selectedIndex = 1;
-
-  //EventBloc _eventBloc = EventBloc();
-  //SessionBloc _sessionBloc = SessionBloc();
 
   static const TextStyle _optionStyle = TextStyle(fontWeight: FontWeight.bold);
 
   static List<Widget> _widgetOptions = <Widget>[
     SessionsTab(),
     ActionTab(),
-    EventsTab(),
+    UserTab(),
   ];
 
   void _onItemTapped(int index) {
@@ -48,38 +39,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, PhoneE
     });
   }
 
-  @override void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    PhoneEventService.instance.addObserver(this);
-    print('home page initialized');
-  }
-
-  @override void dispose() {
-    print('home page disposing');
-    WidgetsBinding.instance.removeObserver(this);
-    PhoneEventService.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    print('widget binding state: ${state.toString()}');
-    widget.eventBloc.newEvent(state.toString());
-  }
-
-  @override
-  void onPhoneEvent(String event) {
-    print('phone event: ${event}');
-    widget.eventBloc.newEvent(event);
-  }
-
   @override
   Widget build(BuildContext context) {
     final DBProvider db = Provider.of<DBProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text('Unplugg'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.share),
@@ -116,7 +81,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, PhoneE
                       ),
                       FlatButton(
                         onPressed: () async {
-                          Provider.of<EventBloc>(context).deleteAll();
                           Provider.of<SessionBloc>(context).deleteAll();
                           Navigator.of(context).pop();
                         },
@@ -144,8 +108,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver, PhoneE
               title: Text('Unplugg', style: _optionStyle),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.list),
-              title: Text('Events', style: _optionStyle),
+              icon: Icon(Icons.account_box),
+              title: Text('You', style: _optionStyle),
             )
           ],
         currentIndex: _selectedIndex,

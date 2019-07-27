@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:unplugg_prototype/blocs/bloc_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'package:unplugg_prototype/blocs/session_bloc.dart';

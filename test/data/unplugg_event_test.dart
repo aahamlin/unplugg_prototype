@@ -7,10 +7,13 @@ import 'package:unplugg_prototype/data/database.dart';
 
 void main() {
 
+  DBProvider dbProvider;
+
   setUp(() async {
     // todo: use mockito to mock the database object
     //await UnpluggEventProvider.db.setDb(testDb);
-    final db = await DBProvider.db.database;
+    dbProvider = DBProvider();
+    final db = await dbProvider.database;
     db.execute('''
 insert into unplugg_session (session_duration, session_start_time) values (60*60*1000,1561600704000);
 insert into unplugg_session (session_duration, session_start_time) values (60*60*1000,1561600756000);
@@ -28,7 +31,7 @@ insert into unplugg_event (event_type, event_timestamp) values ('unlock', 156160
 //  });
 
   test('.getUnpluggEvent() returns event', () async {
-    var event = await DBProvider.db.getUnpluggEvent(1);
+    var event = await dbProvider.getUnpluggEvent(1);
     expect(event.eventType, equals('lock'));
     expect(event.timeStamp, equals(DateTime.fromMillisecondsSinceEpoch(1561600784000)));
   });

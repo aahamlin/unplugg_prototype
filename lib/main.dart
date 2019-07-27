@@ -1,16 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
 import 'package:unplugg_prototype/provider_setup.dart';
 import 'package:unplugg_prototype/router.dart';
-
-//import 'package:unplugg_prototype/data/blocs/bloc_provider.dart';
-//import 'package:unplugg_prototype/data/blocs/event_bloc.dart';
-
-import 'package:unplugg_prototype/data/models/event.dart';
 
 void main() => runApp(MyApp());
 

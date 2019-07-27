@@ -46,9 +46,9 @@ locking|2019-07-04 11:10:47
 
 
 class DBProvider {
-  DBProvider._();
+  //DBProvider._();
 
-  static final DBProvider db = DBProvider._();
+  //static final DBProvider db = DBProvider._();
 
   static Database _database;
 
@@ -213,6 +213,7 @@ create table $tableUnpluggSession (
    */
   close() async {
     final db = await database;
+    print("closing database");
     db.close();
   }
 }

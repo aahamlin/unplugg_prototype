@@ -3,10 +3,10 @@ import Flutter
 import os
 
 enum ChannelName {
-    static let dataProtection = "unpluggyourself.com/dp";
+    static let phoneEvent = "unpluggyourself.com/phone_event";
 }
 
-enum DataProtectionState {
+enum PhoneEventState {
     static let locking = "locking"
     static let unlocked = "unlocked"
 }
@@ -28,9 +28,9 @@ enum DataProtectionState {
             fatalError("rootViewController is not type FlutterViewController")
         }
         
-        let dataProtectionChannel = FlutterEventChannel(name: ChannelName.dataProtection,
+        let channel = FlutterEventChannel(name: ChannelName.phoneEvent,
                                                          binaryMessenger: controller)
-        dataProtectionChannel.setStreamHandler(self)
+        channel.setStreamHandler(self)
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
     
@@ -42,35 +42,18 @@ enum DataProtectionState {
             name: nil,
             object: nil)
 
-        // Can I just hook 1 observer with a method to perform the selector?
-        // other events of interest:
-        // didEnterBackgroundNotification
-        // willEnterForegroundNotification
-        // willResignActiveNotification
-        // willTerminateNotification
         sendPhoneEventState("stream initiated")
         return nil
     }
     
-    let FlutterSemanticsUpdate = Notification.Name(rawValue: "FlutterSemanticsUpdate")
-    
     @objc private func onDidReceiveNotification(_ notification: Notification) {
         switch (notification.name) {
         case UIApplication.protectedDataWillBecomeUnavailableNotification:
-            sendPhoneEventState("locking");
+            sendPhoneEventState(PhoneEventState.locking);
         case UIApplication.protectedDataDidBecomeAvailableNotification:
-            sendPhoneEventState("unlocked");
-        case FlutterSemanticsUpdate:
-            break;
+            sendPhoneEventState(PhoneEventState.unlocked);
         default:
-            if (notification.name.rawValue.starts(with: "UIStatusBar") ||
-                notification.name.rawValue.starts(with: "_UI") ||
-                notification.name.rawValue.starts(with: "UIApplicationScene") ||
-                notification.name.rawValue.starts(with: "UIDeviceOrientation") ||
-                notification.name.rawValue.starts(with: "UIScreenBrightness")) {
-                break;
-            }
-            sendPhoneEventState(notification.name.rawValue);
+            break;
         }
     }
     private func sendPhoneEventState(_ state: String) {
