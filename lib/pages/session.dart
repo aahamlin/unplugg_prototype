@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:unplugg_prototype/services/phone_event_observer.dart';
 
 class SessionPage extends StatefulWidget {
-  SessionPage({Key key}) : super(key: key);
+  SessionPage({Key key, Map<String, dynamic> this.config}) : super(key: key);
+  final Map<String, dynamic> config;
 
   @override _SessionPageState createState() => _SessionPageState();
 }
@@ -48,7 +49,7 @@ class _SessionPageState extends State<SessionPage> with WidgetsBindingObserver, 
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text("New Session", style: Theme.of(context).textTheme.title,),
+              Text('Starting ${widget.config['sessionDuration']} min session', style: Theme.of(context).textTheme.title,),
               FlatButton(
                 color: Theme.of(context).buttonColor,
                 child: Text("Back"),
