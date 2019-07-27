@@ -80,3 +80,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.io/custom-fonts/#from-packages
+
+  fonts:
+    - family: Barista
+      fonts:
+        - asset: "fonts/Barista Regular.otf"
+        - asset: "fonts/Barista SemiBold.otf"
+          weight: 600
+        - asset: "fonts/Barista Light.otf"
+          weight: 300
+  

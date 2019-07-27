@@ -39,6 +39,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
+  @override void initState() {
+    super.initState();
+    print('home page initialized');
+  }
+
+  @override void dispose() {
+    print('home page disposing');
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final DBProvider db = Provider.of<DBProvider>(context);

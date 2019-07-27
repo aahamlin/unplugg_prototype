@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
           title: 'Unplugg Prototype',
           theme: ThemeData(
             primarySwatch: Colors.green,
+            fontFamily: 'Barista'
           ),
           onGenerateRoute: Router.generateRoute,
         ),
