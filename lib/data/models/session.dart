@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import './event.dart';
 
 final String tableUnpluggSession = "unplugg_session";
@@ -28,7 +30,7 @@ class Session {
 
   Session({
     this.id,
-    this.duration,
+    @required this.duration,
     this.eventId,
   });
 
@@ -38,5 +40,9 @@ class Session {
     eventId = map[columnEventFK];
     event = Event.fromMap(map);
     event.id = eventId;
+  }
+
+  DateTime startTime() {
+    return event?.timeStamp;
   }
 }

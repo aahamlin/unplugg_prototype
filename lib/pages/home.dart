@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Unplugg'),
-        actions: <Widget>[
+        /*actions: <Widget>[
           IconButton(
             icon: Icon(Icons.share),
             onPressed: () async {
@@ -92,7 +92,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       FlatButton(
                         onPressed: () async {
-                          Provider.of<SessionBloc>(context).deleteAll();
+                          //Provider.of<SessionBloc>(context).deleteAll();
                           Navigator.of(context).pop();
                         },
                         child: const Text('Ok'),
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-        ],
+        ],*/
       ),
       body: Center(child: _widgetOptions.elementAt(_selectedIndex),
       ),

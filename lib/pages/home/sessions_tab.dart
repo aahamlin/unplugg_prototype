@@ -9,9 +9,20 @@ class SessionsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     print('session tab build triggered');
-    //SessionBloc sessionBloc = BlocProvider.of<SessionBloc>(context);
+
+    return Center(
+      child: Text(
+          'Session History',
+          style: Theme
+              .of(context)
+              .textTheme
+              .title
+      ),
+    );
+  }
+
+  /*Widget _old_build(BuildContext context) {
     SessionBloc sessionBloc = Provider.of<SessionBloc>(context);
     sessionBloc.getSessions();
 
@@ -43,7 +54,7 @@ class SessionsTab extends StatelessWidget {
         }
       },
     );
-  }
+  }*/
 
 
 }

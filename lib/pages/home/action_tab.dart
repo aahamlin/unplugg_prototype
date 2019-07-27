@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:unplugg_prototype/blocs/session_bloc.dart';
 
 class ActionTab extends StatefulWidget {
   ActionTab({Key key}) : super(key: key);
@@ -40,7 +43,7 @@ class _ActionState extends State<ActionTab> {
             iconSize: ButtonTheme.of(context).minWidth,
             icon: ImageIcon(AssetImage('assets/logo.png')),
             color: Colors.green,
-            onPressed: () {
+            onPressed: () async {
               Navigator.pushNamed(context, '/session', arguments: <String, dynamic> {
                 'sessionDuration': _sessionDurationToInt(_selectedDuration)
               });

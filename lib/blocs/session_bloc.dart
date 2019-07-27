@@ -1,26 +1,24 @@
 import 'dart:async';
 
-import './bloc_provider.dart';
+import './bloc_base.dart';
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models/session.dart';
 
 class SessionBloc implements BlocBase  {
-  final _sessionController = StreamController<List<Session>>.broadcast();
-
+  final _sessionController = StreamController<Session>.broadcast();
   final DBProvider _db;
 
   // output stream
-  Stream<List<Session>> get sessions => _sessionController.stream;
+  Stream<Session> get sessions => _sessionController.stream;
 
-  SessionBloc(this._db) {
-    //getSessions();
-  }
+  SessionBloc(this._db);
 
   @override
   void dispose() {
     _sessionController.close();
   }
 
+  /*
   getSessions() async {
     List<Session> sessions = await _db.getAllUnpluggSessions();
     // add all existing sessions to the stream
@@ -36,11 +34,13 @@ class SessionBloc implements BlocBase  {
   deleteAll() async {
     _db.deleteAllSessions();
     getSessions();
-  }
+  }*/
 
-  newSession(Session session) async {
-    await _db.newUnpluggSession(session);
-    getSessions();
+
+  Future<Session> startSession(int duration) async {
+    var session = await _db.newUnpluggSession(Session(duration: Duration(minutes: duration)));
+    _sessionController.sink.add(session);
+    return session;
   }
 
 }
