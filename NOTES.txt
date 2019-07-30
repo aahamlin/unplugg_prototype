@@ -1,0 +1,19 @@
+
+HomePage
+  Session button
+  Session bloc
+    Session with WidgetBindingObserver, DataProtectionObserver
+    new session with duration
+    on incoming events, cancel/fail the session
+
+
+
+Algorithm
+ receive unlock and resume = success, receiving the unlock event means we were running and no other app was foregrounded for the unlock
+ receive a resume without unlock = failure, not receiving unlock event means another app took over
+ 
+Next
+  create service definition listening to iOS event
+  create service definition listening to WidgetsBindingObserver
+  have the event_bloc register with both services and update DB entries
+  create Clear button on events tab

@@ -104,6 +104,9 @@ class SessionPage extends StatelessWidget {
   }
 }
 
+// Need to break this out to UI elements and non-UI elements.
+// for instance, Timer & Stopwatch should be a small Widget counting down
+
 class SessionViewModel extends ChangeNotifier with WidgetsBindingObserver, PhoneEventObserver {
 
   DBProvider _dbProvider;
