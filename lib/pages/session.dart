@@ -29,6 +29,14 @@ class SessionPage extends StatelessWidget {
 //          }
 
           // todo: write a widget for the session page view that handles the success case
+          if (model.isSuccess) {
+            return Scaffold(
+                appBar: AppBar(
+                  title: Text("Session"),
+                ),
+                body: Center(child: Text('SUCCESS')),
+            );
+          }
           return WillPopScope(
             onWillPop: () => _onWillPopScope(context, model),
             child: Scaffold(
@@ -36,25 +44,28 @@ class SessionPage extends StatelessWidget {
                 title: Text("Session"),
               ),
               body: Center(
-                child: Column(
-                  children: <Widget>[
-                    Text('Session: ${model.session}'),
-                    Text(TimerTextFormatter.format(model.timeRemaining)),
-                    Container(
-                      alignment: Alignment.topLeft,
-                      child: ListView.builder(
-                        itemCount: model.events.length,
-                        itemBuilder: (context, int) {
-                          return Container(
-                              height: 50,
-                              child: Text(
-                                  'Event ${int}: ${model.events[int]}')
-                          );
-                        },
-                        shrinkWrap: true,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text('Session: ${model.session}'),
+                      Text(TimerTextFormatter.format(model.timeRemaining)),
+                      Container(
+                        alignment: Alignment.topLeft,
+                        child: ListView.builder(
+                          itemCount: model.events.length,
+                          itemBuilder: (context, int) {
+                            return Container(
+                                height: 50,
+                                child: Text(
+                                    'Event ${int}: ${model.events[int]}')
+                            );
+                          },
+                          shrinkWrap: true,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -25,7 +25,7 @@ class _ActionState extends State<ActionTab> {
   Widget SessionButton(BuildContext context) {
     return Container(
       child: IconButton(
-        iconSize: ButtonTheme.of(context).minWidth,
+        iconSize: 250.0,
         icon: ImageIcon(AssetImage('assets/logo.png')),
         color: Colors.green,
         onPressed: () async {
