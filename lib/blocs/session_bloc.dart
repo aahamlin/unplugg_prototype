@@ -2,14 +2,14 @@ import 'dart:async';
 
 import './bloc_base.dart';
 import 'package:unplugg_prototype/data/database.dart';
-import 'package:unplugg_prototype/data/models/session.dart';
+import 'package:unplugg_prototype/data/models.dart';
 
 class SessionBloc implements BlocBase  {
   final _sessionController = StreamController<Session>.broadcast();
   final DBProvider _db;
 
   // output stream
-  Stream<Session> get sessions => _sessionController.stream;
+  Stream<Session> get session => _sessionController.stream;
 
   SessionBloc(this._db);
 
@@ -37,10 +37,13 @@ class SessionBloc implements BlocBase  {
   }*/
 
 
-  Future<Session> startSession(int duration) async {
-    var session = await _db.newUnpluggSession(Session(duration: Duration(minutes: duration)));
+  Future<Session> startSession(Session session) async {
+    session = await _db.insertSession(session);
     _sessionController.sink.add(session);
     return session;
   }
 
+  void addEvent(Event event) async {
+    await _db.insertEvent(event);
+  }
 }

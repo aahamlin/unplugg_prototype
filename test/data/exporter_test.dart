@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
-import 'package:csv/csv.dart';
 
-import 'package:unplugg_prototype/data/models/event.dart';
+import 'package:csv/csv.dart';
 import 'package:unplugg_prototype/data/exporter.dart';
+import 'package:unplugg_prototype/data/models.dart';
 
 void main() {
 

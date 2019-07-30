@@ -5,6 +5,7 @@ import 'package:test/test.dart';
 //import 'package:sqflite/sqflite.dart';
 import 'package:unplugg_prototype/data/database.dart';
 
+
 void main() {
 
   DBProvider dbProvider;
@@ -29,9 +30,9 @@ insert into unplugg_event (event_type, event_timestamp) values ('unlock', 156160
 //      file.delete();
 //    });
 //  });
-
+  
   test('.getUnpluggEvent() returns event', () async {
-    var event = await dbProvider.getUnpluggEvent(1);
+    var event = await dbProvider.getEvent(1);
     expect(event.eventType, equals('lock'));
     expect(event.timeStamp, equals(DateTime.fromMillisecondsSinceEpoch(1561600784000)));
   });

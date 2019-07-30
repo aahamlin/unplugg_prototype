@@ -1,14 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 
-import 'package:csv/csv.dart';
-import 'package:esys_flutter_share/esys_flutter_share.dart';
-import 'package:provider/provider.dart';
+//import 'package:csv/csv.dart';
+//import 'package:esys_flutter_share/esys_flutter_share.dart';
+//import 'package:provider/provider.dart';
 
-import 'package:unplugg_prototype/data/database.dart';
-import 'package:unplugg_prototype/data/exporter.dart';
-
-import 'package:unplugg_prototype/blocs/session_bloc.dart';
+//import 'package:unplugg_prototype/data/database.dart';
+//import 'package:unplugg_prototype/data/exporter.dart';
 
 import 'package:unplugg_prototype/pages/home/sessions_tab.dart';
 import 'package:unplugg_prototype/pages/home/action_tab.dart';
@@ -52,7 +49,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final DBProvider db = Provider.of<DBProvider>(context);
+    //final DBProvider db = Provider.of<DBProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Unplugg'),

@@ -9,6 +9,7 @@ enum ChannelName {
 enum PhoneEventState {
     static let locking = "locking"
     static let unlocked = "unlocked"
+    static let exiting = "exiting"
 }
 
 
@@ -42,7 +43,7 @@ enum PhoneEventState {
             name: nil,
             object: nil)
 
-        sendPhoneEventState("stream initiated")
+        //sendPhoneEventState("stream initiated")
         return nil
     }
     
@@ -52,6 +53,8 @@ enum PhoneEventState {
             sendPhoneEventState(PhoneEventState.locking);
         case UIApplication.protectedDataDidBecomeAvailableNotification:
             sendPhoneEventState(PhoneEventState.unlocked);
+        case UIApplication.willTerminateNotification:
+            sendPhoneEventState(PhoneEventState.exiting);
         default:
             break;
         }
@@ -74,7 +77,7 @@ enum PhoneEventState {
     }
     
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        sendPhoneEventState("stream cancelled")
+        //sendPhoneEventState("stream cancelled")
         NotificationCenter.default.removeObserver(self)
         eventSink = nil
         return nil

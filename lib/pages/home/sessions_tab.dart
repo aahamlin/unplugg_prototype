@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:provider/provider.dart';
-
-import 'package:unplugg_prototype/blocs/session_bloc.dart';
-import 'package:unplugg_prototype/data/models/session.dart';
+//import 'package:provider/provider.dart';
+//import 'package:unplugg_prototype/blocs/session_bloc.dart';
+//import 'package:unplugg_prototype/data/models.dart';
 
 class SessionsTab extends StatelessWidget {
 
@@ -11,15 +10,13 @@ class SessionsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     print('session tab build triggered');
 
-    return Center(
-      child: Text(
+    return Text(
           'Session History',
           style: Theme
               .of(context)
               .textTheme
               .title
-      ),
-    );
+      );
   }
 
   /*Widget _old_build(BuildContext context) {

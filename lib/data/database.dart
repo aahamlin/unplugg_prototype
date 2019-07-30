@@ -5,8 +5,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'models/event.dart';
-import 'models/session.dart';
+import 'package:unplugg_prototype/data/models.dart';
 
 /*
 
@@ -80,17 +79,20 @@ class DBProvider {
     print('initDB enter');
 
     await db.execute('''
-create table $tableUnpluggEvent ( 
+create table $tableEvent ( 
   $columnEventId integer primary key autoincrement, 
   $columnEventType text not null,
   $columnTimestamp integer not null);
 ''');
     await db.execute('''
-create table $tableUnpluggSession (
+create table $tableSession (
   $columnSessionId integer primary key autoincrement,
   $columnDuration integer not null,
   $columnEventFK integer not null,
-  foreign key($columnEventFK) references event($columnEventId));
+  constraint fk_event
+    foreign key($columnEventFK)
+    references event($columnEventId)
+    on delete cascade);
 ''');
 
   }
@@ -98,18 +100,18 @@ create table $tableUnpluggSession (
   /**
    * insert an event
    */
-  Future<Event> newUnpluggEvent(Event unpluggEvent) async {
+  Future<Event> insertEvent(Event event) async {
     final db = await database;
-    unpluggEvent.id = await db.insert(tableUnpluggEvent, unpluggEvent.toMap());
-    return unpluggEvent;
+    event.id = await db.insert(tableEvent, event.toMap());
+    return event;
   }
 
   /**
    * read an event by id
    */
-  Future<Event> getUnpluggEvent(int id) async {
+  Future<Event> getEvent(int id) async {
     final db = await database;
-    var res = await db.query(tableUnpluggEvent,
+    var res = await db.query(tableEvent,
         columns: [columnEventId, columnEventType, columnTimestamp],
         where: '$columnEventId = ?',
         whereArgs: [id]);
@@ -119,10 +121,10 @@ create table $tableUnpluggSession (
   /**
    * get all events
    */
-  Future<List<Event>> getAllUnpluggEvents() async {
+  Future<List<Event>> getAllEvents() async {
     final db = await database;
     var res =
-        await db.query(tableUnpluggEvent, orderBy: "$columnTimestamp DESC");
+        await db.query(tableEvent, orderBy: "$columnTimestamp DESC");
     List<Event> list =
         res.isNotEmpty ? res.map((e) => Event.fromMap(e)).toList() : [];
     print('db provider returning ${list.length} items');
@@ -132,11 +134,11 @@ create table $tableUnpluggSession (
   /**
    * delete an event by id
    */
-  Future<int> deleteUnpluggEvent(int id) async {
+  Future<int> deleteEvent(int id) async {
     final db = await database;
     // foreign key constraint will need to be met
     return db
-        .delete(tableUnpluggEvent, where: '$columnEventId = ?', whereArgs: [id]);
+        .delete(tableEvent, where: '$columnEventId = ?', whereArgs: [id]);
   }
 
   /**
@@ -144,41 +146,49 @@ create table $tableUnpluggSession (
    */
   Future<int> deleteAllEvents() async {
     final db = await database;
-    return db.rawDelete('DELETE FROM "$tableUnpluggEvent"; VACUUM;');
+    return db.rawDelete('DELETE FROM "$tableEvent"; VACUUM;');
   }
 
   /**
    * create new session
    */
-  Future<Session> newUnpluggSession(Session session) async {
+  Future<Session> insertSession(Session session) async {
     final db = await database;
 
     Event session_event = Event(eventType: 'session', timeStamp: DateTime.now());
-    session_event.id = await db.insert(tableUnpluggEvent, session_event.toMap());
 
-    session.eventId = session_event.id;
-    session.id = await db.insert(tableUnpluggSession, session.toMap());
+    await db.transaction((txn) async {
+      session_event.id = await txn.insert(tableEvent, session_event.toMap());
 
-    session.event = session_event;
+      session.eventId = session_event.id;
+      session.id = await txn.insert(tableSession, session.toMap());
+
+      session.event = session_event;
+    });
+
     return session;
   }
 
-  Future<int> deleteUnpluggSession(int id) async {
+  Future<int> deleteSession(int id) async {
     final db = await database;
     return db
-        .delete(tableUnpluggSession, where: '$columnSessionId = ?', whereArgs: [id]);
+        .delete(tableSession, where: '$columnSessionId = ?', whereArgs: [id]);
   }
 
   Future<int> deleteAllSessions() async {
     final db = await database;
-    return db.rawDelete('DELETE FROM "$tableUnpluggSession"; VACUUM;');
+    return db.rawDelete('DELETE FROM "$tableSession"; VACUUM;');
   }
 
-  Future<Session> getUnpluggSession(int id) async {
+  Future<Session> getSession(int id) async {
     //select s.id,s.duration,e.event_type,e.timestamp from session as s inner join event as e on s.event_id = e.id;
 
     final db = await database;
-    var res = await db.rawQuery("select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp from $tableUnpluggSession as s inner join $tableUnpluggEvent as e on s.$columnEventFK = e.$columnEventId where s.id = ?", [id]);
+    var res = await db.rawQuery('''
+select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp
+  from $tableSession as s inner join $tableEvent as e on s.$columnEventFK = e.$columnEventId
+  where s.id = ?''', [id]);
+
     return res.isNotEmpty ? Session.fromMap(res.first) : null;
   }
 
@@ -197,11 +207,11 @@ create table $tableUnpluggSession (
 //    return res.isNotEmpty ? SessionModel.fromMap(res.first) : null;
 //  }
 
-  Future<List<Session>> getAllUnpluggSessions() async {
+  Future<List<Session>> getAllSessions() async {
     final db = await database;
-    //var res =
-    //    await db.query(tableUnpluggSession);
-    var res = await db.rawQuery("select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp from $tableUnpluggSession as s inner join $tableUnpluggEvent as e on s.$columnEventFK = e.$columnEventId");
+    var res = await db.rawQuery('''
+select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp
+  from $tableSession as s inner join $tableEvent as e on s.$columnEventFK = e.$columnEventId;''');
     List<Session> list = res.isNotEmpty
         ? res.map((e) => Session.fromMap(e)).toList()
         : [];
