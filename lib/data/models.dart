@@ -10,6 +10,8 @@ final String columnEventId = "event_id";
 final String columnEventType = "event_type";
 final String columnTimestamp = "event_timestamp";
 
+final String tableSessionEvent = "unplugg_session_event";
+final String columnSessionEventId = "id";
 
 class Session {
 
@@ -19,6 +21,7 @@ class Session {
   int eventId;
   Event event;
 
+  List<Event> events = List<Event>();
 
   /**
    * Transform Object to Map for Database inserts
@@ -93,6 +96,36 @@ class Event {
     id = map[columnEventId];
     eventType = map[columnEventType];
     timeStamp = DateTime.fromMillisecondsSinceEpoch(map[columnTimestamp]);
+  }
+
+  @override
+  toString() {
+    return toMap().toString();
+  }
+}
+
+class SessionEvent {
+  int id;
+  int session_id;
+  int event_id;
+
+  Map<String, dynamic> toMap() {
+    var map = <String, dynamic> {
+      columnSessionId: session_id,
+      columnEventId: event_id
+    };
+    if (id != null) {
+      map[columnSessionEventId] = id;
+    }
+    return map;
+  }
+
+  SessionEvent({this.id, @required this.session_id, @required this.event_id});
+
+  SessionEvent.fromMap(Map<String, dynamic> map) {
+    id = map[columnSessionEventId];
+    session_id = map[columnSessionId];
+    event_id = map[columnEventId];
   }
 
   @override

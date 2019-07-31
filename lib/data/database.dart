@@ -95,6 +95,12 @@ create table $tableSession (
     on delete cascade);
 ''');
 
+  await db.execute('''
+create table $tableSessionEvent (
+  $columnSessionEventId integer primary key autoincrement,
+  $columnSessionId integer not null,
+  $columnEventId integer not null);
+''');
   }
 
   /**
@@ -166,6 +172,40 @@ create table $tableSession (
       session.event = session_event;
     });
 
+    return session;
+  }
+
+  Future<Session> insertSessionEvent(Session session, Event event) async {
+    final db = await database;
+    
+    await db.transaction((txn) async {
+      var event_id = await txn.insert(tableEvent, event.toMap());
+
+      SessionEvent sessionEvent = SessionEvent(session_id: session.id, event_id: event_id);
+      await txn.insert(tableSessionEvent, sessionEvent.toMap());
+      
+    });
+
+    // update session status from all events for this session
+    return checkAndUpdateSession(session);
+  }
+
+  Future<Session> checkAndUpdateSession(Session session) async {
+    final db = await database;
+
+    var sql = '''
+  select e.$columnEventType, e.$columnTimestamp from $tableEvent as e 
+    join $tableSessionEvent as se on e.$columnEventId = se.$columnEventId
+    where se.$columnSessionId = ?
+  ''';
+    
+    var res = await db.rawQuery(sql, [session.id]);
+
+    // todo: update the success/failure flag appropriately
+    List<Event> list = res.isNotEmpty
+        ? res.map((e) => Event.fromMap(e)).toList()
+        : [];
+    session.events = list;
     return session;
   }
 
