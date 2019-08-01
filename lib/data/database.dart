@@ -158,19 +158,26 @@ create table $tableSessionEvent (
   /**
    * create new session
    */
-  Future<Session> insertSession(Session session) async {
+  Future<Session> insertOrUpdateSession(Session session) async {
     final db = await database;
 
-    Event session_event = Event(eventType: 'session', timeStamp: DateTime.now());
+    if (session.id != null) {
+      await db.update(tableSession, session.toMap(),
+        where: '$columnSessionId = ?', whereArgs: [session.id]);
+    }
+    else {
+      Event session_event = Event(
+          eventType: 'session', timeStamp: DateTime.now());
 
-    await db.transaction((txn) async {
-      session_event.id = await txn.insert(tableEvent, session_event.toMap());
+      await db.transaction((txn) async {
+        session_event.id = await txn.insert(tableEvent, session_event.toMap());
 
-      session.eventId = session_event.id;
-      session.id = await txn.insert(tableSession, session.toMap());
+        session.eventId = session_event.id;
+        session.id = await txn.insert(tableSession, session.toMap());
 
-      session.event = session_event;
-    });
+        session.event = session_event;
+      });
+    }
 
     return session;
   }
@@ -187,10 +194,10 @@ create table $tableSessionEvent (
     });
 
     // update session status from all events for this session
-    return checkAndUpdateSession(session);
+    return updateSessionEvents(session);
   }
 
-  Future<Session> checkAndUpdateSession(Session session) async {
+  Future<Session> updateSessionEvents(Session session) async {
     final db = await database;
 
     var sql = '''
@@ -201,11 +208,11 @@ create table $tableSessionEvent (
     
     var res = await db.rawQuery(sql, [session.id]);
 
-    // todo: update the success/failure flag appropriately
     List<Event> list = res.isNotEmpty
         ? res.map((e) => Event.fromMap(e)).toList()
         : [];
     session.events = list;
+
     return session;
   }
 
@@ -221,15 +228,19 @@ create table $tableSessionEvent (
   }
 
   Future<Session> getSession(int id) async {
-    //select s.id,s.duration,e.event_type,e.timestamp from session as s inner join event as e on s.event_id = e.id;
-
     final db = await database;
     var res = await db.rawQuery('''
 select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp
   from $tableSession as s inner join $tableEvent as e on s.$columnEventFK = e.$columnEventId
   where s.id = ?''', [id]);
 
-    return res.isNotEmpty ? Session.fromMap(res.first) : null;
+    var session = res.isNotEmpty ? Session.fromMap(res.first) : null;
+
+    if (session != null) {
+      return await updateSessionEvents(session);
+    }
+    // todo: throw error?
+    return null;
   }
 
   /**

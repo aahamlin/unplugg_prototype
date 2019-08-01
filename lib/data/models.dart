@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 final String tableSession = "unplugg_session";
 final String columnSessionId = "session_id";
 final String columnEventFK = "event_fk";
 final String columnDuration = "session_duration";
+// todo: add completion fields
 
 final String tableEvent = "unplugg_event";
 final String columnEventId = "event_id";
@@ -21,6 +23,7 @@ class Session {
   int eventId;
   Event event;
 
+  // todo: this may be temporary, as it is orthogonal to simple session data
   List<Event> events = List<Event>();
 
   /**

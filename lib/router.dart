@@ -9,8 +9,8 @@ class Router {
       case '/':
         return MaterialPageRoute(builder: (context) => HomePage());
       case '/session':
-        Map<String, dynamic> config = settings.arguments;
-        return MaterialPageRoute(builder: (context) => SessionPage(config: config));
+        var session = settings.arguments;
+        return MaterialPageRoute(builder: (context) => SessionPage(session: session));
       default:
         String unknownRoute = settings.name;
         return new MaterialPageRoute(builder: (context) => NotFoundPage(name: unknownRoute));

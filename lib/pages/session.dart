@@ -3,23 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/models.dart';
 import 'package:unplugg_prototype/viewmodel/session.dart';
 
 class SessionPage extends StatelessWidget {
 
-  final Map<String, dynamic> config;
+  final Session session;
 
-  SessionPage({Key key, Map<String, dynamic> this.config}) : super(key: key);
+  SessionPage({Key key, Session this.session}) : super(key: key);
 
   @override Widget build(BuildContext context) {
     return ChangeNotifierProxyProvider<DBProvider, SessionViewModel>(
       builder: (context, dbProvider, _) => SessionViewModel(
         dbProvider: dbProvider,
-        session: config['session'],
+        session: session,
       ),
       child: Consumer<SessionViewModel>(
         builder: (context, model, _) {
-          if (model.isSuccess) {
+          if (model.state == SessionState.completed) {
             return Scaffold(
                 appBar: AppBar(
                   title: Text("Session"),
@@ -44,20 +45,20 @@ class SessionPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('Session: ${model.session}'),
+                      Text('Session: ${model}'),
                       Spacer(),
                       SessionTimer(
-                          duration: model.session.duration,
-                          onSuccess: (bool) => model.setSuccess(bool)),
+                          duration: model.duration,
+                          onSuccess: (bool) => model.setState(SessionState.completed)),
                       Container(
                         alignment: Alignment.topLeft,
                         child: ListView.builder(
-                          itemCount: model.session.events.length,
+                          itemCount: model.events.length,
                           itemBuilder: (context, int) {
                             return Container(
                                 height: 50,
                                 child: Text(
-                                    'Event ${int}: ${model.session.events[int]}')
+                                    'Event ${int}: ${model.events[int]}')
                             );
                           },
                           shrinkWrap: true,
@@ -133,7 +134,7 @@ class TimerText extends StatelessWidget {
 
 class SessionTimer extends StatefulWidget {
   final Duration duration;
-  Function(bool) onSuccess;
+  final Function(bool) onSuccess;
   SessionTimer({Key key, Duration this.duration, Function(bool) this.onSuccess}) : super(key: key);
 
   @override

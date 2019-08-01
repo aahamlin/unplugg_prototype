@@ -7,22 +7,53 @@ import 'package:unplugg_prototype/data/models.dart';
 import 'package:unplugg_prototype/services/phone_event_observer.dart';
 //import 'package:unplugg_prototype/blocs/session_bloc.dart';
 
+enum SessionState {
+  pending,
+  running,
+  completed,
+  error,
+}
+
+class SessionService {
+  final DBProvider dbProvider;
+  SessionService(this.dbProvider);
+
+
+  Future<Session> startSession(Session session) async {
+    return await dbProvider.insertOrUpdateSession(session);
+  }
+
+  Future<Session> updateSession(Session session) async {
+    return await dbProvider.insertOrUpdateSession(session);
+  }
+
+  Future<Session> addEventToSession(Session session, Event event) async {
+    return await dbProvider.insertSessionEvent(session, event);
+  }
+}
 
 class SessionViewModel extends ChangeNotifier with WidgetsBindingObserver, PhoneEventObserver {
 
-  DBProvider _dbProvider;
+  SessionService _service;
   Session _session;
-
-  bool _success = false;
+  SessionState _state = SessionState.pending;
 
   SessionViewModel({@required DBProvider dbProvider, @required Session session}) {
-    _dbProvider = dbProvider;
     _session = session;
-
+    _service = SessionService(dbProvider);
     WidgetsBinding.instance.addObserver(this);
     PhoneEventService.instance.addObserver(this);
 
-    startSession();
+    // handles returning to app from local notification
+    _service.startSession(session).then((session) {
+      _state = SessionState.running;
+      setSession(session);
+    });
+  }
+
+  void setSession(Session session) {
+    _session = session;
+    notifyListeners();
   }
 
   @override
@@ -39,7 +70,7 @@ class SessionViewModel extends ChangeNotifier with WidgetsBindingObserver, Phone
   void didChangeAppLifecycleState(AppLifecycleState state) {
     //print('widget binding state change: ${describeEnum(state)}');
     var event = Event(eventType: describeEnum(state), timeStamp: DateTime.now());
-    addEvent(event);
+    _service.addEventToSession(_session, event).then((session) => setSession(session));
   }
 
 
@@ -47,24 +78,23 @@ class SessionViewModel extends ChangeNotifier with WidgetsBindingObserver, Phone
   void onPhoneEvent(PhoneEvent phoneEvent) {
     //print('phone event: ${phoneEvent}');
     var event = Event(eventType: describeEnum(phoneEvent.name), timeStamp: phoneEvent.dateTime);
-    addEvent(event);
+    _service.addEventToSession(_session, event).then((session) => setSession(session));
+
   }
 
-  void setSuccess(bool isSuccess) {
-    _success = isSuccess;
+  void setState(SessionState newState) {
+    var session = _session;
+    _state = newState;
+    _service.updateSession(session).then((session) => setSession(session));
     notifyListeners();
   }
 
-  Session get session => _session;
-  bool get isSuccess => _success;
+  Duration get duration => _session.duration;
+  SessionState get state => _state;
+  List<Event> get events => _session.events;
 
-
-  void startSession() async {
-    await _dbProvider.insertSession(_session);
-  }
-
-  void addEvent(Event event) async {
-    _session = await _dbProvider.insertSessionEvent(session, event);
-    notifyListeners();
+  @override
+  toString() {
+    return _session.toString();
   }
 }
