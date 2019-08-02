@@ -5,7 +5,7 @@ import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models.dart';
 
 import 'package:unplugg_prototype/services/phone_event_observer.dart';
-//import 'package:unplugg_prototype/blocs/session_bloc.dart';
+//import 'package:unplugg_prototype/blocs/session_state_bloc.dart';
 
 enum SessionState {
   pending,

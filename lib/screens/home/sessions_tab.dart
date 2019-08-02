@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 //import 'package:provider/provider.dart';
-//import 'package:unplugg_prototype/blocs/session_bloc.dart';
+//import 'package:unplugg_prototype/blocs/session_state_bloc.dart';
 //import 'package:unplugg_prototype/data/models.dart';
 
 class SessionsTab extends StatelessWidget {

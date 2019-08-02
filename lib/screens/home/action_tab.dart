@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'package:unplugg_prototype/data/models.dart';
+import 'package:provider/provider.dart';
+import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 
 class ActionTab extends StatefulWidget {
   ActionTab({Key key}) : super(key: key);
@@ -23,19 +23,24 @@ class _ActionState extends State<ActionTab> {
   int _selectedDuration = SessionDuration.THIRTY;
 
   Widget SessionButton(BuildContext context) {
-    return Container(
-      child: IconButton(
-        iconSize: 250.0,
-        icon: ImageIcon(AssetImage('assets/logo.png')),
-        color: Colors.green,
-        onPressed: () async {
-          Navigator.pushNamed(context, '/session', arguments: <String, dynamic> {
-            'session': Session(
-              duration: Duration(minutes: _selectedDuration),
-            )
-          });
-        },
-      ),
+    return Consumer<SessionStateBloc>(
+      builder: (context, bloc, child) {
+        return Container(
+          child: IconButton(
+            iconSize: 250.0,
+            icon: ImageIcon(AssetImage('assets/logo.png')),
+            color: Colors.green,
+            onPressed: () async {
+              var model = SessionModel(
+                duration: Duration(minutes: _selectedDuration),
+              );
+              bloc.start(model);
+              Navigator.pushNamed(context, '/session');
+            },
+          ),
+        );
+
+      }
     );
   }
 

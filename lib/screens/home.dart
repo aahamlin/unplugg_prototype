@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 //import 'package:unplugg_prototype/data/database.dart';
 //import 'package:unplugg_prototype/data/exporter.dart';
 
-import 'package:unplugg_prototype/pages/home/sessions_tab.dart';
-import 'package:unplugg_prototype/pages/home/action_tab.dart';
-import 'package:unplugg_prototype/pages/home/user_tab.dart';
+import 'package:unplugg_prototype/screens/home/sessions_tab.dart';
+import 'package:unplugg_prototype/screens/home/action_tab.dart';
+import 'package:unplugg_prototype/screens/home/user_tab.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);

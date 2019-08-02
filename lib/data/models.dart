@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
-final String tableSession = "unplugg_session";
-final String columnSessionId = "session_id";
-final String columnEventFK = "event_fk";
+final String tableSession = "session";
+final String columnSessionId = "id";
 final String columnDuration = "session_duration";
-// todo: add completion fields
+final String columnStartTimestamp = "start_timestamp";
+final String columnFinishTimestamp = "finish_timestamp";
+final String columnFinishReason = "finish_reason";
 
-final String tableEvent = "unplugg_event";
-final String columnEventId = "event_id";
+final String tableEvent = "event";
+final String columnEventId = "id";
 final String columnEventType = "event_type";
 final String columnTimestamp = "event_timestamp";
 
 final String tableSessionEvent = "unplugg_session_event";
 final String columnSessionEventId = "id";
+final String columnSessionEventSessionId = "session_id";
+final String columnSessionEventEventId = "event_id";
 
 class Session {
 
   int id;
   Duration duration;
-  // event table
-  int eventId;
-  Event event;
+  DateTime startTime;
+  DateTime finishTime;
+  String finishReason;
 
   // todo: this may be temporary, as it is orthogonal to simple session data
   List<Event> events = List<Event>();
@@ -33,7 +36,9 @@ class Session {
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       columnDuration: duration.inMilliseconds,
-      columnEventFK: eventId,
+      columnStartTimestamp: startTime?.millisecondsSinceEpoch,
+      columnFinishTimestamp: finishTime?.millisecondsSinceEpoch,
+      columnFinishReason: finishReason,
     };
     if (id != null) {
       map[columnSessionId] = id;
@@ -44,7 +49,9 @@ class Session {
   Session({
     this.id,
     @required this.duration,
-    this.eventId,
+    this.startTime,
+    this.finishTime,
+    this.finishReason,
   });
 
   /**
@@ -53,13 +60,9 @@ class Session {
   Session.fromMap(Map<String, dynamic> map) {
     id = map[columnSessionId];
     duration = new Duration(milliseconds: map[columnDuration]);
-    eventId = map[columnEventFK];
-    event = Event.fromMap(map);
-    event.id = eventId;
-  }
-
-  DateTime get startTime {
-    return event?.timeStamp;
+    startTime = DateTime.fromMillisecondsSinceEpoch(map[columnStartTimestamp]);
+    finishTime = DateTime.fromMillisecondsSinceEpoch(map[columnFinishTimestamp]);
+    finishReason = map[columnFinishReason];
   }
 
   @override

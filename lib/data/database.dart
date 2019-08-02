@@ -88,18 +88,16 @@ create table $tableEvent (
 create table $tableSession (
   $columnSessionId integer primary key autoincrement,
   $columnDuration integer not null,
-  $columnEventFK integer not null,
-  constraint fk_event
-    foreign key($columnEventFK)
-    references event($columnEventId)
-    on delete cascade);
+  $columnStartTimestamp integer,
+  $columnFinishTimestamp integer,
+  $columnFinishReason text);
 ''');
 
   await db.execute('''
 create table $tableSessionEvent (
   $columnSessionEventId integer primary key autoincrement,
-  $columnSessionId integer not null,
-  $columnEventId integer not null);
+  $columnSessionEventSessionId integer not null,
+  $columnSessionEventEventId integer not null);
 ''');
   }
 
@@ -161,24 +159,16 @@ create table $tableSessionEvent (
   Future<Session> insertOrUpdateSession(Session session) async {
     final db = await database;
 
-    if (session.id != null) {
+    if (session.id == null) {
+      session.startTime = DateTime.now();
+      session.id = await db.insert(tableSession, session.toMap());
+    }
+    else {
       await db.update(tableSession, session.toMap(),
         where: '$columnSessionId = ?', whereArgs: [session.id]);
     }
-    else {
-      Event session_event = Event(
-          eventType: 'session', timeStamp: DateTime.now());
 
-      await db.transaction((txn) async {
-        session_event.id = await txn.insert(tableEvent, session_event.toMap());
-
-        session.eventId = session_event.id;
-        session.id = await txn.insert(tableSession, session.toMap());
-
-        session.event = session_event;
-      });
-    }
-
+    print('insertOrUpdate session ${session}');
     return session;
   }
 
@@ -202,8 +192,8 @@ create table $tableSessionEvent (
 
     var sql = '''
   select e.$columnEventType, e.$columnTimestamp from $tableEvent as e 
-    join $tableSessionEvent as se on e.$columnEventId = se.$columnEventId
-    where se.$columnSessionId = ?
+    join $tableSessionEvent as se on e.$columnEventId = se.$columnSessionEventEventId
+    where se.$columnSessionEventSessionId = ?
   ''';
     
     var res = await db.rawQuery(sql, [session.id]);
@@ -213,6 +203,7 @@ create table $tableSessionEvent (
         : [];
     session.events = list;
 
+    print('updateSessionEvents session ${session}');
     return session;
   }
 
@@ -229,10 +220,11 @@ create table $tableSessionEvent (
 
   Future<Session> getSession(int id) async {
     final db = await database;
-    var res = await db.rawQuery('''
-select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp
-  from $tableSession as s inner join $tableEvent as e on s.$columnEventFK = e.$columnEventId
-  where s.id = ?''', [id]);
+
+    var res = await db.query(tableSession,
+        columns: [columnSessionId, columnDuration, columnStartTimestamp, columnFinishTimestamp, columnFinishReason],
+        where: '$columnSessionId = ?',
+        whereArgs: [id]);
 
     var session = res.isNotEmpty ? Session.fromMap(res.first) : null;
 
@@ -260,9 +252,10 @@ select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventTy
 
   Future<List<Session>> getAllSessions() async {
     final db = await database;
-    var res = await db.rawQuery('''
-select s.$columnSessionId, s.$columnDuration, s.$columnEventFK, e.$columnEventType, e.$columnTimestamp
-  from $tableSession as s inner join $tableEvent as e on s.$columnEventFK = e.$columnEventId;''');
+
+    var res = await db.query(tableSession,
+        columns: [columnSessionId, columnDuration, columnStartTimestamp, columnFinishTimestamp, columnFinishReason]);
+
     List<Session> list = res.isNotEmpty
         ? res.map((e) => Session.fromMap(e)).toList()
         : [];
