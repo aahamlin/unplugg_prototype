@@ -11,12 +11,8 @@ final String columnFinishReason = "finish_reason";
 final String tableEvent = "event";
 final String columnEventId = "id";
 final String columnEventType = "event_type";
-final String columnTimestamp = "event_timestamp";
-
-final String tableSessionEvent = "unplugg_session_event";
-final String columnSessionEventId = "id";
-final String columnSessionEventSessionId = "session_id";
-final String columnSessionEventEventId = "event_id";
+final String columnEventTimestamp = "event_timestamp";
+final String columnEventSessionId = "session_id";
 
 class Session {
 
@@ -25,9 +21,6 @@ class Session {
   DateTime startTime;
   DateTime finishTime;
   String finishReason;
-
-  // todo: this may be temporary, as it is orthogonal to simple session data
-  List<Event> events = List<Event>();
 
   /**
    * Transform Object to Map for Database inserts
@@ -77,6 +70,7 @@ class Event {
   int id;
   String eventType;
   DateTime timeStamp; // millisSinceEpoch
+  int session_id;
 
   /**
    * Transform Object to Map for Database inserts
@@ -85,7 +79,8 @@ class Event {
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       columnEventType: eventType,
-      columnTimestamp: timeStamp.millisecondsSinceEpoch
+      columnEventTimestamp: timeStamp.millisecondsSinceEpoch,
+      columnEventSessionId: session_id,
     };
     if (id != null) {
       map[columnEventId] = id;
@@ -93,7 +88,7 @@ class Event {
     return map;
   }
 
-  Event({this.id, @required this.eventType, @required this.timeStamp});
+  Event({this.id, @required this.eventType, @required this.timeStamp, this.session_id});
 
   /**
    * Transform from Map to Object from Database queries
@@ -101,37 +96,8 @@ class Event {
   Event.fromMap(Map<String, dynamic> map) {
     id = map[columnEventId];
     eventType = map[columnEventType];
-    timeStamp = DateTime.fromMillisecondsSinceEpoch(map[columnTimestamp]);
-  }
-
-  @override
-  toString() {
-    return toMap().toString();
-  }
-}
-
-class SessionEvent {
-  int id;
-  int session_id;
-  int event_id;
-
-  Map<String, dynamic> toMap() {
-    var map = <String, dynamic> {
-      columnSessionId: session_id,
-      columnEventId: event_id
-    };
-    if (id != null) {
-      map[columnSessionEventId] = id;
-    }
-    return map;
-  }
-
-  SessionEvent({this.id, @required this.session_id, @required this.event_id});
-
-  SessionEvent.fromMap(Map<String, dynamic> map) {
-    id = map[columnSessionEventId];
-    session_id = map[columnSessionId];
-    event_id = map[columnEventId];
+    timeStamp = DateTime.fromMillisecondsSinceEpoch(map[columnEventTimestamp]);
+    session_id = map[columnEventSessionId];
   }
 
   @override

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:unplugg_prototype/data/models.dart';
+import 'package:unplugg_prototype/services/phone_event_observer.dart';
 import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 
 class SessionPage extends StatelessWidget {
@@ -13,21 +15,21 @@ class SessionPage extends StatelessWidget {
       appBar: AppBar(
         title: Text('Session'),
       ),
-      body: Consumer<SessionStateBloc>(
+      body: Consumer<SessionModelBloc>(
         builder: (context, bloc, child) {
           return StreamBuilder<SessionModel>(
-            stream: bloc.session,
+            stream: bloc.sessionModel,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 var model = snapshot.data;
                 if (model.state == SessionState.completed) {
                   return Center(
-                    child: Text('SUCCESS'),
+                    child: Text('You earned ${model.duration} moments.'),
                   );
                 }
                 else if (model.state == SessionState.cancelled) {
                   return Center(
-                    child: Text('CANCELLED'),
+                    child: Text('Sorry, you did not earn ${model.duration} moments.'),
                   );
                 }
                 else {
@@ -37,6 +39,7 @@ class SessionPage extends StatelessWidget {
                       child: SessionTimer(
                         duration: calculateDurationSinceStartTime(model.startTime, model.duration),
                         onComplete: () => bloc.complete(model),
+                        onEvent: (event) => bloc.record(model, event),
                       ),
                     ),
                   );
@@ -56,7 +59,7 @@ class SessionPage extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('End Your Unplugg Session?'),
-          content: const Text('You will forfeit these moments.'),
+          content: Text('You are close to earning ${model.duration} moments.'),
           actions: <Widget>[
             FlatButton(
                 onPressed: () async {
@@ -66,7 +69,7 @@ class SessionPage extends StatelessWidget {
             ),
             FlatButton(
               onPressed: () async {
-                Provider.of<SessionStateBloc>(context).cancel(model);
+                Provider.of<SessionModelBloc>(context).cancel(model);
                 Navigator.of(context).pop(true);
               },
               child: const Text('YES'),
@@ -118,7 +121,11 @@ class TimerText extends StatelessWidget {
 class SessionTimer extends StatefulWidget {
   final Duration duration;
   final Function onComplete;
-  SessionTimer({Key key, Duration this.duration, Function this.onComplete}) : super(key: key);
+  final Function(Event) onEvent;
+  SessionTimer({Key key,
+    Duration this.duration,
+    Function this.onComplete,
+    Function(Event) this.onEvent}) : super(key: key);
 
   @override
   _SessionTimerState createState() => _SessionTimerState();
@@ -126,7 +133,7 @@ class SessionTimer extends StatefulWidget {
 
 }
 
-class _SessionTimerState extends State<SessionTimer> {
+class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver, PhoneEventObserver {
 
   Timer _timer;
   Stopwatch _stopwatch;
@@ -137,13 +144,17 @@ class _SessionTimerState extends State<SessionTimer> {
     _timer = Timer.periodic(new Duration(seconds: 1), callback);
     _stopwatch = Stopwatch();
     _stopwatch.start();
-
+    WidgetsBinding.instance.addObserver(this);
+    PhoneEventService.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    PhoneEventService.instance.removeObserver(this);
     _timer.cancel();
     _stopwatch.reset();
+
     super.dispose();
   }
 
@@ -156,6 +167,17 @@ class _SessionTimerState extends State<SessionTimer> {
     setState(() {
 
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    widget.onEvent(Event(eventType: describeEnum(state), timeStamp: DateTime.now()));
+  }
+
+
+  @override
+  void onPhoneEvent(PhoneEvent phoneEvent) {
+    widget.onEvent(Event(eventType: describeEnum(phoneEvent.name), timeStamp: phoneEvent.dateTime));
   }
 
   Duration get timeRemaining {

@@ -82,7 +82,8 @@ class DBProvider {
 create table $tableEvent ( 
   $columnEventId integer primary key autoincrement, 
   $columnEventType text not null,
-  $columnTimestamp integer not null);
+  $columnEventTimestamp integer not null,
+  $columnEventSessionId integer);
 ''');
     await db.execute('''
 create table $tableSession (
@@ -91,13 +92,6 @@ create table $tableSession (
   $columnStartTimestamp integer,
   $columnFinishTimestamp integer,
   $columnFinishReason text);
-''');
-
-  await db.execute('''
-create table $tableSessionEvent (
-  $columnSessionEventId integer primary key autoincrement,
-  $columnSessionEventSessionId integer not null,
-  $columnSessionEventEventId integer not null);
 ''');
   }
 
@@ -116,7 +110,7 @@ create table $tableSessionEvent (
   Future<Event> getEvent(int id) async {
     final db = await database;
     var res = await db.query(tableEvent,
-        columns: [columnEventId, columnEventType, columnTimestamp],
+        columns: [columnEventId, columnEventType, columnEventTimestamp],
         where: '$columnEventId = ?',
         whereArgs: [id]);
     return res.isNotEmpty ? Event.fromMap(res.first) : null;
@@ -128,7 +122,7 @@ create table $tableSessionEvent (
   Future<List<Event>> getAllEvents() async {
     final db = await database;
     var res =
-        await db.query(tableEvent, orderBy: "$columnTimestamp DESC");
+        await db.query(tableEvent, orderBy: "$columnEventTimestamp DESC");
     List<Event> list =
         res.isNotEmpty ? res.map((e) => Event.fromMap(e)).toList() : [];
     print('db provider returning ${list.length} items');
@@ -172,39 +166,21 @@ create table $tableSessionEvent (
     return session;
   }
 
-  Future<Session> insertSessionEvent(Session session, Event event) async {
-    final db = await database;
-    
-    await db.transaction((txn) async {
-      var event_id = await txn.insert(tableEvent, event.toMap());
-
-      SessionEvent sessionEvent = SessionEvent(session_id: session.id, event_id: event_id);
-      await txn.insert(tableSessionEvent, sessionEvent.toMap());
-      
-    });
-
-    // update session status from all events for this session
-    return updateSessionEvents(session);
-  }
-
-  Future<Session> updateSessionEvents(Session session) async {
+  Future<List<Event>> getAllSessionEvents(int id) async {
     final db = await database;
 
     var sql = '''
-  select e.$columnEventType, e.$columnTimestamp from $tableEvent as e 
-    join $tableSessionEvent as se on e.$columnEventId = se.$columnSessionEventEventId
-    where se.$columnSessionEventSessionId = ?
+  select e.$columnEventType, e.$columnEventTimestamp, e.$columnEventSessionId from $tableEvent as e
+    where e.$columnEventSessionId = ?
   ''';
     
-    var res = await db.rawQuery(sql, [session.id]);
+    var res = await db.rawQuery(sql, [id]);
 
-    List<Event> list = res.isNotEmpty
+    List<Event> events = res.isNotEmpty
         ? res.map((e) => Event.fromMap(e)).toList()
         : [];
-    session.events = list;
 
-    print('updateSessionEvents session ${session}');
-    return session;
+    return events;
   }
 
   Future<int> deleteSession(int id) async {
@@ -226,13 +202,8 @@ create table $tableSessionEvent (
         where: '$columnSessionId = ?',
         whereArgs: [id]);
 
-    var session = res.isNotEmpty ? Session.fromMap(res.first) : null;
-
-    if (session != null) {
-      return await updateSessionEvents(session);
-    }
-    // todo: throw error?
-    return null;
+    return res.isNotEmpty ?
+      Session.fromMap(res.first) : null;
   }
 
   /**

@@ -18,12 +18,12 @@ class SessionModel {
   SessionState state;
 
   SessionModel({
-    int this.id,
-    Duration this.duration,
-    DateTime this.startTime,
-    DateTime this.finishTime,
-    String this.finishReason,
-    SessionState this.state = SessionState.pending,
+    this.id,
+    this.duration,
+    this.startTime,
+    this.finishTime,
+    this.finishReason,
+    this.state = SessionState.pending,
   });
 
   Session toSession() {
@@ -37,11 +37,11 @@ class SessionModel {
   }
 }
 
-class SessionStateBloc {
+class SessionModelBloc {
 
   final DBProvider dbProvider;
 
-  SessionStateBloc({DBProvider this.dbProvider});
+  SessionModelBloc({DBProvider this.dbProvider});
 
   void dispose() {
     _controller.close();
@@ -52,7 +52,7 @@ class SessionStateBloc {
     onCancel: () => print("cancelled"),
   );
 
-  Stream<SessionModel> get session => _controller.stream;
+  Stream<SessionModel> get sessionModel => _controller.stream;
 
   void start(SessionModel model) async {
     var session = await dbProvider.insertOrUpdateSession(Session(
@@ -81,6 +81,18 @@ class SessionStateBloc {
     await dbProvider.insertOrUpdateSession(session);
 
     model.state = SessionState.cancelled;
+    _controller.sink.add(model);
+  }
+
+  void record(SessionModel model, Event event) async {
+    event.session_id = model.id;
+    await dbProvider.insertEvent(event);
+
+    List<Event> eventsDuringSession = await dbProvider.getAllSessionEvents(model.id);
+
+    // todo: check error conditions
+    print(eventsDuringSession.last);
+
     _controller.sink.add(model);
   }
 }

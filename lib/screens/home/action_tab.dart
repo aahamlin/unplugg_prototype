@@ -23,7 +23,7 @@ class _ActionState extends State<ActionTab> {
   int _selectedDuration = SessionDuration.THIRTY;
 
   Widget SessionButton(BuildContext context) {
-    return Consumer<SessionStateBloc>(
+    return Consumer<SessionModelBloc>(
       builder: (context, bloc, child) {
         return Container(
           child: IconButton(

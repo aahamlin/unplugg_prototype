@@ -17,8 +17,8 @@ List<SingleChildCloneableWidget> _independentServices = [
 ];
 
 List<SingleChildCloneableWidget> _dependentServices = [
-  ProxyProvider<DBProvider, SessionStateBloc>(
-    builder: (context, dbProvider, bloc) => SessionStateBloc(
+  ProxyProvider<DBProvider, SessionModelBloc>(
+    builder: (context, dbProvider, bloc) => SessionModelBloc(
       dbProvider: dbProvider,
     ),
   ),
