@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 
 class ActionTab extends StatefulWidget {
   ActionTab({Key key}) : super(key: key);
@@ -9,9 +7,8 @@ class ActionTab extends StatefulWidget {
   _ActionState createState() => _ActionState();
 }
 
-// TODO Change to a Class with Const int values
 class SessionDuration {
-  static const ONE = 1; // for debugging
+  static const DEBUG = 5; // for debugging
   static const FIFTEEN = 15;
   static const THIRTY = 30;
   static const FORTYFIVE = 45;
@@ -23,33 +20,17 @@ class _ActionState extends State<ActionTab> {
   int _selectedDuration = SessionDuration.THIRTY;
 
   Widget SessionButton(BuildContext context) {
-    return Consumer<SessionModelBloc>(
-      builder: (context, bloc, child) {
-        return Container(
-          child: IconButton(
-            iconSize: 250.0,
-            icon: ImageIcon(AssetImage('assets/logo.png')),
-            color: Colors.green,
-            onPressed: () async {
-              var model = SessionModel(
-                duration: Duration(minutes: _selectedDuration),
-              );
-              bloc.start(model);
-              Navigator.pushNamed(context, '/session');
-            },
-          ),
-        );
-
-      }
+    return Container(
+      child: IconButton(
+        iconSize: 250.0,
+        icon: ImageIcon(AssetImage('assets/logo.png')),
+        color: Colors.green,
+        onPressed: () async {;
+          Navigator.pushNamed(context, '/session', arguments: Duration(minutes: _selectedDuration));
+        },
+      ),
     );
   }
-
-  /*child: Ink(
-          decoration: ShapeDecoration(
-            color: Colors.white,
-            shape: CircleBorder(),
-          ),*/
-
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +48,8 @@ class _ActionState extends State<ActionTab> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             _SessionRadio(
-              label: '1m',
-              value: SessionDuration.ONE,
+              label: '5m (debug)',
+              value: SessionDuration.DEBUG,
               groupValue: _selectedDuration,
               onChanged: (sessionDuration) {
                 setState(() {
@@ -142,7 +123,6 @@ class _SessionRadio extends StatelessWidget {
           value: value,
           groupValue: groupValue,
           onChanged: (int sessionDuration) {
-            print("chose $sessionDuration");
             onChanged(sessionDuration);
           }
       ),

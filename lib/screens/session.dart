@@ -2,54 +2,69 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models.dart';
 import 'package:unplugg_prototype/services/phone_event_observer.dart';
 import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 
 class SessionPage extends StatelessWidget {
 
-  SessionPage({Key key}) : super(key: key);
+  final Duration duration;
+  SessionPage({Key key, Duration this.duration}) : super(key: key);
 
   @override Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Session'),
       ),
-      body: Consumer<SessionModelBloc>(
-        builder: (context, bloc, child) {
-          return StreamBuilder<SessionModel>(
-            stream: bloc.sessionModel,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                var model = snapshot.data;
-                if (model.state == SessionState.completed) {
-                  return Center(
-                    child: Text('You earned ${model.duration} moments.'),
-                  );
+      body: ProxyProvider<DBProvider, SessionModelBloc>(
+        builder: (context, dbProvider, bloc) => SessionModelBloc(
+          dbProvider: dbProvider,
+          duration: duration,
+        ),
+        child: Consumer<SessionModelBloc>(
+          builder: (context, bloc, child) {
+            return StreamBuilder<SessionModel>(
+              stream: bloc.sessionModel,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  var model = snapshot.data;
+                  if (model.state == SessionState.completed) {
+                    return Center(
+                      child: Text('You earned ${model.duration.inMinutes} moment(s).'),
+                    );
+                  }
+                  else if (model.state == SessionState.cancelled) {
+                    return Center(
+                      child: Text('Sorry, you did not earn ${model.duration.inMinutes} moment(s).'),
+                    );
+                  }
+                  else {
+                    return WillPopScope(
+                      onWillPop: () => _onWillPopScope(context, model),
+                      child: Center(
+                        child: SessionTimer(
+                          duration: calculateDurationSinceStartTime(model.startTime, model.duration),
+                          onComplete: () => bloc.complete(model),
+                          onEvent: (event) => bloc.record(model, event),
+                        ),
+                      ),
+                    );
+                  }
                 }
-                else if (model.state == SessionState.cancelled) {
-                  return Center(
-                    child: Text('Sorry, you did not earn ${model.duration} moments.'),
-                  );
+                else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
                 }
                 else {
-                  return WillPopScope(
-                    onWillPop: () => _onWillPopScope(context, model),
-                    child: Center(
-                      child: SessionTimer(
-                        duration: calculateDurationSinceStartTime(model.startTime, model.duration),
-                        onComplete: () => bloc.complete(model),
-                        onEvent: (event) => bloc.record(model, event),
-                      ),
-                    ),
+                  return Center(
+                    child: CircularProgressIndicator(),
                   );
                 }
-              }
-              // no state, return waiting indicator
-              return CircularProgressIndicator();
-            },
-          );
-        },
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -147,6 +162,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
     WidgetsBinding.instance.addObserver(this);
     PhoneEventService.instance.addObserver(this);
   }
+
 
   @override
   void dispose() {

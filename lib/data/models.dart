@@ -3,7 +3,8 @@ import 'package:flutter/foundation.dart';
 
 final String tableSession = "session";
 final String columnSessionId = "id";
-final String columnDuration = "session_duration";
+final String columnSessionDuration = "duration";
+final String columnSessionExpiry = "expiry";
 final String columnStartTimestamp = "start_timestamp";
 final String columnFinishTimestamp = "finish_timestamp";
 final String columnFinishReason = "finish_reason";
@@ -19,6 +20,7 @@ class Session {
   int id;
   Duration duration;
   DateTime startTime;
+  DateTime expiry;
   DateTime finishTime;
   String finishReason;
 
@@ -28,8 +30,9 @@ class Session {
    */
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
-      columnDuration: duration.inMilliseconds,
+      columnSessionDuration: duration.inMilliseconds,
       columnStartTimestamp: startTime?.millisecondsSinceEpoch,
+      columnSessionExpiry: expiry?.millisecondsSinceEpoch,
       columnFinishTimestamp: finishTime?.millisecondsSinceEpoch,
       columnFinishReason: finishReason,
     };
@@ -42,6 +45,7 @@ class Session {
   Session({
     this.id,
     @required this.duration,
+    this.expiry,
     this.startTime,
     this.finishTime,
     this.finishReason,
@@ -52,9 +56,10 @@ class Session {
    */
   Session.fromMap(Map<String, dynamic> map) {
     id = map[columnSessionId];
-    duration = new Duration(milliseconds: map[columnDuration]);
-    startTime = DateTime.fromMillisecondsSinceEpoch(map[columnStartTimestamp]);
-    finishTime = DateTime.fromMillisecondsSinceEpoch(map[columnFinishTimestamp]);
+    duration = Duration(milliseconds: map[columnSessionDuration]);
+    expiry = map[columnSessionExpiry]!=null ? DateTime.fromMillisecondsSinceEpoch(map[columnSessionExpiry]):null;
+    startTime = map[columnStartTimestamp]!=null ? DateTime.fromMillisecondsSinceEpoch(map[columnStartTimestamp]):null;
+    finishTime = map[columnFinishTimestamp]!=null ? DateTime.fromMillisecondsSinceEpoch(map[columnFinishTimestamp]):null;
     finishReason = map[columnFinishReason];
   }
 

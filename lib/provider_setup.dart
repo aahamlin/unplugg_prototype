@@ -1,6 +1,5 @@
 import 'package:provider/provider.dart';
 import 'package:unplugg_prototype/data/database.dart';
-import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 
 List<SingleChildCloneableWidget> providers = [
   ..._independentServices,
@@ -17,11 +16,7 @@ List<SingleChildCloneableWidget> _independentServices = [
 ];
 
 List<SingleChildCloneableWidget> _dependentServices = [
-  ProxyProvider<DBProvider, SessionModelBloc>(
-    builder: (context, dbProvider, bloc) => SessionModelBloc(
-      dbProvider: dbProvider,
-    ),
-  ),
+
 ];
 
 List<SingleChildCloneableWidget> _uiConsumableProviders = [];

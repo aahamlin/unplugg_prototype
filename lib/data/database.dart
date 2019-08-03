@@ -88,7 +88,8 @@ create table $tableEvent (
     await db.execute('''
 create table $tableSession (
   $columnSessionId integer primary key autoincrement,
-  $columnDuration integer not null,
+  $columnSessionDuration integer not null,
+  $columnSessionExpiry integer,
   $columnStartTimestamp integer,
   $columnFinishTimestamp integer,
   $columnFinishReason text);
@@ -101,6 +102,7 @@ create table $tableSession (
   Future<Event> insertEvent(Event event) async {
     final db = await database;
     event.id = await db.insert(tableEvent, event.toMap());
+    print('insert ${event}');
     return event;
   }
 
@@ -198,7 +200,14 @@ create table $tableSession (
     final db = await database;
 
     var res = await db.query(tableSession,
-        columns: [columnSessionId, columnDuration, columnStartTimestamp, columnFinishTimestamp, columnFinishReason],
+        columns: [
+          columnSessionId,
+          columnSessionDuration,
+          columnSessionExpiry,
+          columnStartTimestamp,
+          columnFinishTimestamp,
+          columnFinishReason
+        ],
         where: '$columnSessionId = ?',
         whereArgs: [id]);
 
@@ -206,9 +215,6 @@ create table $tableSession (
       Session.fromMap(res.first) : null;
   }
 
-  /**
-   * get most current session
-   */
 //  Future<SessionModel> getUnpluggSession() async {
 //    final db = await database;
 //    var table = await db
@@ -221,11 +227,72 @@ create table $tableSession (
 //    return res.isNotEmpty ? SessionModel.fromMap(res.first) : null;
 //  }
 
+  Future<int> findMostRecentSessionId() async {
+    final db = await database;
+
+    await _checkAndExpireLingeringSessions();
+
+    var now = DateTime.now();
+    var res = await db.query(tableSession,
+      columns: [
+        columnSessionId,
+      ],
+      where: '$columnFinishTimestamp IS NULL AND $columnStartTimestamp < ?',
+      whereArgs: [now.millisecondsSinceEpoch]);
+
+    assert(res.length <= 1); // there should only be zero or one active
+    if (res.isEmpty) throw Exception('no session found');
+    return res.first[columnSessionId];
+  }
+  
+  Future<void> _checkAndExpireLingeringSessions() async {
+    final db = await database;
+
+    var now = DateTime.now();
+    var res = await db.query(tableSession,
+        columns: [
+          columnSessionId,
+          columnSessionDuration,
+          columnSessionExpiry,
+          columnStartTimestamp,
+          columnFinishTimestamp,
+          columnFinishReason,
+        ],
+        where: '$columnFinishTimestamp IS NULL AND $columnStartTimestamp < ?',
+        whereArgs: [now.millisecondsSinceEpoch]);
+
+    List<Session> list = res.isNotEmpty
+        ? res.map((e) => Session.fromMap(e)).toList()
+        : [];
+
+    list.forEach((session) async {
+      if (session.expiry != null && now.isAfter(session.expiry)) {
+        session.finishTime = session.expiry;
+        session.finishReason = 'expired';
+      }
+      else {
+        var finishTime = session.startTime.add(session.duration);
+        if (now.isAfter(finishTime)) {
+          session.finishTime = finishTime;
+          session.finishReason = 'success';// todo: make constant reasons
+        }
+      }
+      await insertOrUpdateSession(session);
+    });
+  }
+
   Future<List<Session>> getAllSessions() async {
     final db = await database;
 
     var res = await db.query(tableSession,
-        columns: [columnSessionId, columnDuration, columnStartTimestamp, columnFinishTimestamp, columnFinishReason]);
+        columns: [
+          columnSessionId,
+          columnSessionDuration,
+          columnSessionExpiry,
+          columnStartTimestamp,
+          columnFinishTimestamp,
+          columnFinishReason
+        ]);
 
     List<Session> list = res.isNotEmpty
         ? res.map((e) => Session.fromMap(e)).toList()

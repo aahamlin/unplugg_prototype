@@ -1,12 +1,29 @@
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
-
 import 'package:unplugg_prototype/provider_setup.dart';
 import 'package:unplugg_prototype/router.dart';
+import 'package:unplugg_prototype/shared/notifications.dart';
 
-void main() => runApp(MyApp());
+void main() async {
 
+  var notificationManager = NotificationManager();
+  notificationManager.configureLocalNotifications();
+
+  var notificationAppLaunchDetails =
+    await notificationManager.getNotificationAppLaunchDetails();
+
+  if(notificationAppLaunchDetails.didNotificationLaunchApp) {
+//    var details = SessionNotificationDetails.fromJson(
+//        jsonDecode(notificationAppLaunchDetails.payload));
+
+    Router.initialRoute = RouteNames.SESSION;
+  }
+
+  runApp(MyApp());
+
+}
 class MyApp extends StatelessWidget {
   
   @override
@@ -20,6 +37,7 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.green,
             fontFamily: 'Barista'
           ),
+          initialRoute: Router.initialRoute,
           onGenerateRoute: Router.generateRoute,
         ),
     );
