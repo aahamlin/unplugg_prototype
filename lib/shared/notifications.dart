@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
+import 'package:unplugg_prototype/shared/timer_formatter.dart';
 
 class SessionNotificationDetails {
   int sessionId;
@@ -55,8 +56,7 @@ class NotificationManager {
       DateTime scheduledTime) async {
     var notificationId = MOMENTS_EXPIRING_ID;
 
-    var durationToExpiry = sessionNotificationDetails.expiry.difference(
-        DateTime.now());
+    var expiry = sessionNotificationDetails.expiry;
 
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
@@ -67,8 +67,8 @@ class NotificationManager {
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.schedule(
       notificationId,
-      'Unplugg Session Expiration',
-      'Your session will expire in ${durationToExpiry.inSeconds} seconds',
+      'Unplugg Expiration Warning',
+      'Your session will expire at ${expiry.toString()}.',
       scheduledTime,
       platformChannelSpecifics,
       payload: jsonEncode(sessionNotificationDetails.toJson()),

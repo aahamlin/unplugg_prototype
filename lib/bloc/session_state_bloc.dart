@@ -79,7 +79,7 @@ class SessionModelBloc {
     _controller.close();
   }
 
-  StreamController<SessionModel> _controller = StreamController();
+  StreamController<SessionModel> _controller = StreamController.broadcast();
 
   Stream<SessionModel> get sessionModel => _controller.stream;
 
@@ -137,8 +137,8 @@ class SessionModelBloc {
 
     // on pause, setup notification for 2 minutes with 3 min session expiry
     if (eventType == 'inactive') {
-      var warningNotificationTime = DateTime.now().add(Duration(minutes: 1));
-      var sessionExpirationTime = DateTime.now().add(Duration(minutes: 3));
+      var warningNotificationTime = DateTime.now().add(Duration(seconds: 30));
+      var sessionExpirationTime = DateTime.now().add(Duration(minutes: 1));
       var sessionNotificationDetails = SessionNotificationDetails(
           sessionId: model.id, expiry: sessionExpirationTime);
 
@@ -159,6 +159,7 @@ class SessionModelBloc {
       }
     }
 
+    // todo: if user backgrounds the app more than X times, fail their session
     _controller.sink.add(model);
   }
 

@@ -6,6 +6,7 @@ import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models.dart';
 import 'package:unplugg_prototype/services/phone_event_observer.dart';
 import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
+import 'package:unplugg_prototype/widgets/timer.dart';
 
 class SessionPage extends StatelessWidget {
 
@@ -30,6 +31,7 @@ class SessionPage extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   var model = snapshot.data;
+
                   if (model.state == SessionState.completed) {
                     return Center(
                       child: Text('You earned ${model.duration.inMinutes} moment(s).'),
@@ -42,7 +44,7 @@ class SessionPage extends StatelessWidget {
                   }
                   else {
                     return WillPopScope(
-                      onWillPop: () => _onWillPopScope(context, model),
+                      onWillPop: () => _onWillPopScope(context, model, (model) => bloc.cancel(model)),
                       child: Center(
                         child: SessionTimer(
                           duration: calculateDurationSinceStartTime(model.startTime, model.duration),
@@ -69,12 +71,12 @@ class SessionPage extends StatelessWidget {
     );
   }
 
-  Future<bool> _onWillPopScope(BuildContext context, SessionModel model) async {
+  Future<bool> _onWillPopScope(BuildContext context, SessionModel model, Function(SessionModel) cancelCallback) async {
     return showDialog(context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('End Your Unplugg Session?'),
-          content: Text('You are close to earning ${model.duration} moments.'),
+          content: Text('You are close to earning ${model.duration.inMinutes} moments.'),
           actions: <Widget>[
             FlatButton(
                 onPressed: () async {
@@ -84,7 +86,7 @@ class SessionPage extends StatelessWidget {
             ),
             FlatButton(
               onPressed: () async {
-                Provider.of<SessionModelBloc>(context).cancel(model);
+                await cancelCallback(model);
                 Navigator.of(context).pop(true);
               },
               child: const Text('YES'),
@@ -106,32 +108,6 @@ Duration calculateDurationSinceStartTime(DateTime startTime, Duration totalDurat
   return remainingDuration;
 }
 
-class TimerTextFormatter {
-  static String format(Duration duration) {
-    assert(duration != null);
-    int hours = duration.inHours;
-    int minutes = duration.inMinutes;
-    int seconds = duration.inSeconds;
-
-    String hoursStr = (hours % 24).toString().padLeft(1, '0');
-    String minutesStr = (minutes % 60).toString().padLeft(2, '0');
-    String secondsStr = (seconds % 60).toString().padLeft(2, '0');
-
-    return "$hoursStr.$minutesStr:$secondsStr";
-  }
-}
-
-class TimerText extends StatelessWidget {
-  final Duration duration;
-  TimerText({Key key, Duration this.duration}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(TimerTextFormatter.format(duration),
-      style: Theme.of(context).textTheme.display1.merge(TextStyle(color: Colors.green))
-    );
-  }
-}
 
 class SessionTimer extends StatefulWidget {
   final Duration duration;
@@ -144,7 +120,6 @@ class SessionTimer extends StatefulWidget {
 
   @override
   _SessionTimerState createState() => _SessionTimerState();
-
 
 }
 

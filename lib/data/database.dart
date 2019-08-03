@@ -230,22 +230,13 @@ create table $tableSession (
   Future<int> findMostRecentSessionId() async {
     final db = await database;
 
-    await _checkAndExpireLingeringSessions();
+    //await _checkAndExpireLingeringSessions();
 
-    var now = DateTime.now();
-    var res = await db.query(tableSession,
-      columns: [
-        columnSessionId,
-      ],
-      where: '$columnFinishTimestamp IS NULL AND $columnStartTimestamp < ?',
-      whereArgs: [now.millisecondsSinceEpoch]);
-
-    assert(res.length <= 1); // there should only be zero or one active
-    if (res.isEmpty) throw Exception('no session found');
-    return res.first[columnSessionId];
+    var res = await db.rawQuery('SELECT MAX($columnSessionId) AS id FROM $tableSession');
+    return res.isNotEmpty ? res.first['id'] : throw Exception('no session');
   }
   
-  Future<void> _checkAndExpireLingeringSessions() async {
+  /*Future<void> _checkAndExpireLingeringSessions() async {
     final db = await database;
 
     var now = DateTime.now();
@@ -277,9 +268,10 @@ create table $tableSession (
           session.finishReason = 'success';// todo: make constant reasons
         }
       }
+      print('updating ${session}');
       await insertOrUpdateSession(session);
     });
-  }
+  }*/
 
   Future<List<Session>> getAllSessions() async {
     final db = await database;

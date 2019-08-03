@@ -1,22 +1,50 @@
 import 'package:flutter/material.dart';
 
-//import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 //import 'package:unplugg_prototype/blocs/session_state_bloc.dart';
-//import 'package:unplugg_prototype/data/models.dart';
+import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/models.dart';
 
 class SessionsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('session tab build triggered');
+    DBProvider dbProvider = Provider.of(context);
 
-    return Text(
-          'Session History',
-          style: Theme
-              .of(context)
-              .textTheme
-              .title
-      );
+    return FutureBuilder<List<Session>>(
+      initialData: List<Session>(),
+      future: dbProvider.getAllSessions(),
+      builder: (context, snapshot) {
+        switch(snapshot.connectionState) {
+          case ConnectionState.none:
+          case ConnectionState.waiting:
+          case ConnectionState.active:
+            return CircularProgressIndicator();
+          case ConnectionState.done:
+            if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+            else {
+              var sessionList = snapshot.data;
+
+              return ListView.builder(
+                  itemCount: sessionList.length,
+                  itemBuilder: (context, index) {
+
+                    var sessionEntry = sessionList[index];
+
+                    return ListTile(
+                      leading: Icon(Icons.event),
+                      title: Text('Session ${sessionEntry.id}'),
+                      subtitle: Text('${sessionEntry.duration.inMinutes}m ${sessionEntry.finishReason}\n${sessionEntry.startTime.toString()} - ${sessionEntry.finishTime.toString()}'),
+                      isThreeLine: true,
+                    );
+                  });
+            }
+
+        }
+      },
+    );
   }
 
   /*Widget _old_build(BuildContext context) {

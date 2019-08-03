@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 //import 'package:csv/csv.dart';
 //import 'package:esys_flutter_share/esys_flutter_share.dart';
-//import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
+import 'package:unplugg_prototype/router.dart';
 
-//import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/data/database.dart';
+import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 //import 'package:unplugg_prototype/data/exporter.dart';
 
 import 'package:unplugg_prototype/screens/home/sessions_tab.dart';
@@ -39,17 +41,28 @@ class _HomePageState extends State<HomePage> {
 
   @override void initState() {
     super.initState();
-    print('home page initialized');
   }
 
   @override void dispose() {
-    print('home page disposing');
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    //final DBProvider db = Provider.of<DBProvider>(context);
+
+    final DBProvider db = Provider.of<DBProvider>(context);
+    // todo: put findMostRecentSession into the Bloc
+    /*db.findMostRecentSessionId().then((id) {
+      if (id > 0) {
+        db.getSession(id).then((session) {
+          if (!SessionModel.fromSession(session).isFinished) {
+            Navigator.pushNamed(context, RouteNames.SESSION);
+          }
+        });
+      }
+    });
+    */
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Unplugg'),

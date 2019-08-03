@@ -8,16 +8,17 @@ import 'package:unplugg_prototype/shared/notifications.dart';
 
 void main() async {
 
+  // todo: user should be returned to session page for all existing session, regardless of notification
+
   var notificationManager = NotificationManager();
   notificationManager.configureLocalNotifications();
-
+//
   var notificationAppLaunchDetails =
     await notificationManager.getNotificationAppLaunchDetails();
-
+//
   if(notificationAppLaunchDetails.didNotificationLaunchApp) {
 //    var details = SessionNotificationDetails.fromJson(
 //        jsonDecode(notificationAppLaunchDetails.payload));
-
     Router.initialRoute = RouteNames.SESSION;
   }
 
