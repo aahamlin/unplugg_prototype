@@ -1,59 +1,8 @@
 import 'dart:async';
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models.dart';
-import 'package:unplugg_prototype/shared/notifications.dart';
-
-enum SessionState {
-  pending,
-  running,
-  completed,
-  cancelled,
-}
-
-class SessionModel {
-  int id;
-  Duration duration;
-  DateTime expiry;
-  DateTime startTime;
-  DateTime finishTime;
-  String finishReason;
-  SessionState state;
-
-  SessionModel.fromSession(Session session) {
-    id = session.id;
-    duration = session.duration;
-    expiry = session.expiry;
-    startTime = session.startTime;
-    finishTime = session.finishTime;
-    finishReason = session.finishReason;
-  }
-
-  SessionModel({
-    this.id,
-    this.duration,
-    this.expiry,
-    this.startTime,
-    this.finishTime,
-    this.finishReason,
-    this.state = SessionState.pending,
-  });
-
-  Session toSession() {
-     return Session(
-      id: this.id,
-      startTime: this.startTime,
-      expiry: this.expiry,
-      duration: this.duration,
-      finishTime: this.finishTime,
-      finishReason: this.finishReason,
-    );
-  }
-
-  bool get isStarted => startTime != null;
-  bool get isFinished => finishTime != null;
-  bool get isExpired => expiry != null && expiry.isBefore(DateTime.now());
-
-}
+import 'package:unplugg_prototype/shared/session_model.dart';
+import 'package:unplugg_prototype/shared/session_state.dart';
 
 class SessionModelBloc {
 
@@ -131,37 +80,9 @@ class SessionModelBloc {
   void record(SessionModel model, Event event) async {
     event.session_id = model.id;
     await dbProvider.insertEvent(event);
-
-    var notificationManager = NotificationManager();
-    var eventType = event.eventType;
-
-    // on pause, setup notification for 2 minutes with 3 min session expiry
-    if (eventType == 'inactive') {
-      var warningNotificationTime = DateTime.now().add(Duration(seconds: 30));
-      var sessionExpirationTime = DateTime.now().add(Duration(minutes: 1));
-      var sessionNotificationDetails = SessionNotificationDetails(
-          sessionId: model.id, expiry: sessionExpirationTime);
-
-      model.expiry = sessionExpirationTime;
-      await dbProvider.insertOrUpdateSession(model.toSession());
-
-      notificationManager.showMomentsExpiringNotification(
-          sessionNotificationDetails,
-          warningNotificationTime);
-    }
-
-    // on locking or resumed, within time window, cancel notification, cancel expiry
-    else if (eventType == 'locking' || eventType == 'resumed') {
-      if(event.timeStamp.isBefore(model.expiry)) {
-        notificationManager.cancelMomentsExpiringNotification();
-        model.expiry = null;
-        await dbProvider.insertOrUpdateSession(model.toSession());
-      }
-    }
-
+    await dbProvider.insertOrUpdateSession(model.toSession());
     // todo: if user backgrounds the app more than X times, fail their session
     _controller.sink.add(model);
   }
-
 
 }

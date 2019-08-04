@@ -1,31 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'phone_event_state.dart';
 
-enum PhoneEventName {
-  locking,
-  unlocked,
-  exiting
-}
-
-class PhoneEvent {
-  PhoneEvent(this._name);
-
-  PhoneEventName _name;
-  final DateTime _dateTime = DateTime.now();
-
-  PhoneEventName get name => _name;
-  DateTime get dateTime => _dateTime;
-
-  PhoneEvent.fromString(String str) {
-    PhoneEventName pen = PhoneEventName.values.firstWhere((pen) => describeEnum(pen) == str);
-    assert(pen != null);
-    this._name = pen;
-  }
-
-  @override toString() {
-    return '${_name}@${_dateTime.toString()}';
-  }
-}
+import 'phone_event_model.dart';
 
 class PhoneEventService {
 
@@ -52,7 +29,7 @@ class PhoneEventService {
   }
 
   void _handlePhoneEvent(rawEvent) {
-    var event = PhoneEvent.fromString(rawEvent);
+    var event = PhoneEventModel.fromString(rawEvent);
     print('platform event: ${event.toString()}');
     _notifyObservers(event);
 
@@ -70,7 +47,7 @@ class PhoneEventService {
     _observers.clear();
   }
 
-  void _notifyObservers(PhoneEvent event) {
+  void _notifyObservers(PhoneEventModel event) {
     //_observers.forEach((o) => o.onPhoneEvent(event));
     for(PhoneEventObserver observer in _observers) {
       observer.onPhoneEvent(event);
@@ -81,6 +58,6 @@ class PhoneEventService {
 
 abstract class PhoneEventObserver {
 
-  void onPhoneEvent(PhoneEvent event);
+  void onPhoneEvent(PhoneEventModel event);
 
 }

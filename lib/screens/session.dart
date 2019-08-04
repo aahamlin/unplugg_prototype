@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models.dart';
-import 'package:unplugg_prototype/services/phone_event_observer.dart';
 import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
-import 'package:unplugg_prototype/widgets/timer.dart';
+import 'package:unplugg_prototype/shared/notifications.dart';
+import 'package:unplugg_prototype/widgets/session_timer.dart';
+import 'package:unplugg_prototype/shared/utilities.dart';
+import 'package:unplugg_prototype/shared/session_model.dart';
+import 'package:unplugg_prototype/shared/session_state.dart';
 
 class SessionPage extends StatelessWidget {
 
@@ -49,7 +52,10 @@ class SessionPage extends StatelessWidget {
                         child: SessionTimer(
                           duration: calculateDurationSinceStartTime(model.startTime, model.duration),
                           onComplete: () => bloc.complete(model),
-                          onEvent: (event) => bloc.record(model, event),
+                          onEvent: (event) {
+                            model =_setupNotifications(model, event);
+                            bloc.record(model, event);
+                          },
                         ),
                       ),
                     );
@@ -69,6 +75,36 @@ class SessionPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  SessionModel _setupNotifications(SessionModel model, Event event) {
+
+    var notificationManager = NotificationManager();
+    var eventType = event.eventType;
+
+    // on pause, setup notification for 2 minutes with 3 min session expiry
+    if (eventType == 'inactive') {
+      var warningNotificationTime = DateTime.now().add(Duration(seconds: 30));
+      var sessionExpirationTime = DateTime.now().add(Duration(minutes: 1));
+
+      model.expiry = sessionExpirationTime;
+      //await dbProvider.insertOrUpdateSession(model.toSession());
+
+      notificationManager.showMomentsExpiringNotification(
+          sessionExpirationTime,
+          warningNotificationTime);
+    }
+
+    // on locking or resumed, within time window, cancel notification, cancel expiry
+    else if (eventType == 'locking' || eventType == 'resumed') {
+      if(event.timeStamp.isBefore(model.expiry)) {
+        notificationManager.cancelMomentsExpiringNotification();
+        model.expiry = null;
+        //await dbProvider.insertOrUpdateSession(model.toSession());
+      }
+    }
+
+    return model;
   }
 
   Future<bool> _onWillPopScope(BuildContext context, SessionModel model, Function(SessionModel) cancelCallback) async {
@@ -98,85 +134,3 @@ class SessionPage extends StatelessWidget {
   }
 }
 
-Duration calculateDurationSinceStartTime(DateTime startTime, Duration totalDuration) {
-  var now = DateTime.now();
-  assert(startTime.isBefore(now));// cannot start in the future
-  var remainingDuration = totalDuration;
-  if(now.isAfter(startTime)) {
-    remainingDuration -= now.difference(startTime);
-  }
-  return remainingDuration;
-}
-
-
-class SessionTimer extends StatefulWidget {
-  final Duration duration;
-  final Function onComplete;
-  final Function(Event) onEvent;
-  SessionTimer({Key key,
-    Duration this.duration,
-    Function this.onComplete,
-    Function(Event) this.onEvent}) : super(key: key);
-
-  @override
-  _SessionTimerState createState() => _SessionTimerState();
-
-}
-
-class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver, PhoneEventObserver {
-
-  Timer _timer;
-  Stopwatch _stopwatch;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(new Duration(seconds: 1), callback);
-    _stopwatch = Stopwatch();
-    _stopwatch.start();
-    WidgetsBinding.instance.addObserver(this);
-    PhoneEventService.instance.addObserver(this);
-  }
-
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    PhoneEventService.instance.removeObserver(this);
-    _timer.cancel();
-    _stopwatch.reset();
-
-    super.dispose();
-  }
-
-  void callback(Timer timer) {
-    if (_stopwatch.elapsed >= widget.duration) {
-      _timer.cancel();
-      _stopwatch.stop();
-      widget.onComplete();
-    }
-    setState(() {
-
-    });
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    widget.onEvent(Event(eventType: describeEnum(state), timeStamp: DateTime.now()));
-  }
-
-
-  @override
-  void onPhoneEvent(PhoneEvent phoneEvent) {
-    widget.onEvent(Event(eventType: describeEnum(phoneEvent.name), timeStamp: phoneEvent.dateTime));
-  }
-
-  Duration get timeRemaining {
-    return widget.duration - _stopwatch.elapsed;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TimerText(duration: timeRemaining);
-  }
-}

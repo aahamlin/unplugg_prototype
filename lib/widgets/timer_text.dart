@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:unplugg_prototype/shared/timer_formatter.dart';
+import 'package:unplugg_prototype/shared/utilities.dart';
 
 class TimerText extends StatelessWidget {
   final Duration duration;

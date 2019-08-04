@@ -5,15 +5,15 @@ import 'package:provider/provider.dart';
 import 'package:unplugg_prototype/data/database.dart';
 import 'package:unplugg_prototype/data/models.dart';
 
-class SessionsTab extends StatelessWidget {
+class EventsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
     DBProvider dbProvider = Provider.of(context);
 
-    return FutureBuilder<List<Session>>(
-      initialData: List<Session>(),
-      future: dbProvider.getAllSessions(),
+    return FutureBuilder<List<Event>>(
+      initialData: List<Event>(),
+      future: dbProvider.getAllEvents(),
       builder: (context, snapshot) {
         switch(snapshot.connectionState) {
           case ConnectionState.none:
@@ -25,18 +25,18 @@ class SessionsTab extends StatelessWidget {
               return Text('${snapshot.error}');
             }
             else {
-              var sessionList = snapshot.data;
+              var eventList = snapshot.data;
 
               return ListView.builder(
-                  itemCount: sessionList.length,
+                  itemCount: eventList.length,
                   itemBuilder: (context, index) {
 
-                    var sessionEntry = sessionList[index];
+                    var entry = eventList[index];
 
                     return ListTile(
                       leading: Icon(Icons.event),
-                      title: Text('Session ${sessionEntry.id}'),
-                      subtitle: Text('${sessionEntry.duration.inMinutes}m ${sessionEntry.finishReason}\n${sessionEntry.startTime.toLocal()} - ${sessionEntry.finishTime.toLocal()}'),
+                      title: Text('Event ${entry.id}'),
+                      subtitle: Text('${entry.eventType} during Session ${entry.session_id}\n${entry.timeStamp.toLocal()}'),
                       isThreeLine: true,
                     );
                   });

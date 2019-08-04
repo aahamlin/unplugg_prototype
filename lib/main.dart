@@ -8,7 +8,7 @@ import 'package:unplugg_prototype/shared/notifications.dart';
 
 void main() async {
 
-  // todo: user should be returned to session page for all existing session, regardless of notification
+  // todo: returned to session all existing session, regardless of notification
 
   var notificationManager = NotificationManager();
   notificationManager.configureLocalNotifications();

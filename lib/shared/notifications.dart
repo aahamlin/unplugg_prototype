@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
-import 'package:unplugg_prototype/shared/timer_formatter.dart';
+import 'package:unplugg_prototype/shared/utilities.dart';
 
-class SessionNotificationDetails {
+/*class SessionNotificationDetails {
   int sessionId;
   DateTime expiry;
 
@@ -20,7 +20,7 @@ class SessionNotificationDetails {
         'session_id': sessionId,
         'expiry': expiry.millisecondsSinceEpoch,
       };
-}
+}*/
 
 class NotificationManager {
 
@@ -52,12 +52,10 @@ class NotificationManager {
   }
 
   Future<void> showMomentsExpiringNotification(
-      SessionNotificationDetails sessionNotificationDetails,
+      DateTime expiry,
       DateTime scheduledTime) async {
+    print('Schedule moments expiring notification');
     var notificationId = MOMENTS_EXPIRING_ID;
-
-    var expiry = sessionNotificationDetails.expiry;
-
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
         'Unplugg Prototype Notifications',
@@ -71,11 +69,12 @@ class NotificationManager {
       'Your session will expire at ${expiry.toString()}.',
       scheduledTime,
       platformChannelSpecifics,
-      payload: jsonEncode(sessionNotificationDetails.toJson()),
+      //payload: jsonEncode(sessionNotificationDetails.toJson()),
     );
   }
 
   Future<void> cancelMomentsExpiringNotification() async {
+    print('Cancel moments expiring notification');
     await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_ID);
   }
 
@@ -90,19 +89,19 @@ class NotificationManager {
   }
 
   Future<void> onSelectNotification(String payload) async {
-    var details = SessionNotificationDetails.fromJson(jsonDecode(payload));
+    //var details = SessionNotificationDetails.fromJson(jsonDecode(payload));
 
     await Navigator.pushNamed(
         null,
         '/session',
-        arguments: SessionModel(id: details.sessionId)
+        //arguments: SessionModel(id: details.sessionId)
     );
   }
 
   Future<void> onDidReceiveLocalNotification(int id, String title, String body,
       String payload) async {
     print('iOS local notification: ' + payload);
-    var details = SessionNotificationDetails.fromJson(jsonDecode(payload));
+    //var details = SessionNotificationDetails.fromJson(jsonDecode(payload));
     // display a dialog with the notification details, tap ok to go to another page
     await showDialog(
       context: null,
@@ -119,7 +118,7 @@ class NotificationManager {
                   await Navigator.pushNamed(
                       context,
                       '/session',
-                      arguments: SessionModel(id: details.sessionId)
+                      //arguments: SessionModel(id: details.sessionId)
                   );
                 },
               )

@@ -24,3 +24,14 @@ class TimerTextFormatter {
     return "$minutesStr:$secondsStr";
   }
 }
+
+
+Duration calculateDurationSinceStartTime(DateTime startTime, Duration totalDuration) {
+  var now = DateTime.now();
+  assert(startTime.isBefore(now));// cannot start in the future
+  var remainingDuration = totalDuration;
+  if(now.isAfter(startTime)) {
+    remainingDuration -= now.difference(startTime);
+  }
+  return remainingDuration;
+}

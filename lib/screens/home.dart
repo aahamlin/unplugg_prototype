@@ -12,6 +12,7 @@ import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/screens/home/sessions_tab.dart';
 import 'package:unplugg_prototype/screens/home/action_tab.dart';
 import 'package:unplugg_prototype/screens/home/user_tab.dart';
+import 'package:unplugg_prototype/screens/home/events_tab.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -29,7 +30,7 @@ class _HomePageState extends State<HomePage> {
   static List<Widget> _widgetOptions = <Widget>[
     SessionsTab(),
     ActionTab(),
-    UserTab(),
+    EventsTab(),
   ];
 
   void _onItemTapped(int index) {
@@ -128,8 +129,8 @@ class _HomePageState extends State<HomePage> {
               title: Text('Unplugg', style: _optionStyle),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.account_box),
-              title: Text('You', style: _optionStyle),
+              icon: Icon(Icons.event),
+              title: Text('Events', style: _optionStyle),
             )
           ],
         currentIndex: _selectedIndex,

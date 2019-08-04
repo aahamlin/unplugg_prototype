@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import 'package:unplugg_prototype/screens/session.dart';
+import 'package:unplugg_prototype/shared/utilities.dart';
 
 void main() {
 
