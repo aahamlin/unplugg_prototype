@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import 'package:unplugg_prototype/shared/utilities.dart';
+import 'package:unplugg_prototype/core/shared/utilities.dart';
 
 void main() {
 

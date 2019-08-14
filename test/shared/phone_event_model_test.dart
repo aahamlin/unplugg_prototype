@@ -1,8 +1,8 @@
 import 'package:test/test.dart';
 
-import 'package:unplugg_prototype/shared/phone_event_observer.dart';
-import 'package:unplugg_prototype/shared/phone_event_model.dart';
-import 'package:unplugg_prototype/shared/phone_event_state.dart';
+import 'package:unplugg_prototype/core/services/phone_event/phone_event_observer.dart';
+import 'package:unplugg_prototype/core/services/phone_event/phone_event_model.dart';
+import 'package:unplugg_prototype/core/services/phone_event/phone_event_state.dart';
 
 void main() {
 

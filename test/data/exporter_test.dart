@@ -4,28 +4,28 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 import 'package:csv/csv.dart';
-import 'package:unplugg_prototype/data/exporter.dart';
-import 'package:unplugg_prototype/data/models.dart';
+import 'package:unplugg_prototype/core/data/exporter.dart';
+import 'package:unplugg_prototype/core/data/models/session.dart';
 
 void main() {
 
   File tmpFile = File(p.join(Directory.systemTemp.path, "test.csv"));
   List<List<dynamic>> exportResults;
 
-  const List<String> headers = ['id', 'eventType', 'timeStamp'];
+  const List<String> headers = ['id', 'duration', 'start'];
 
   setUp(() {
-    List<Event> events = List();
-    events.add(Event(id: 1, timeStamp: DateTime.now(), eventType: 'locking'));
-    events.add(Event(id: 2, timeStamp: DateTime.now(), eventType: 'unlocked'));
+    List<Session> sessions = List();
+    sessions.add(Session(id: 1, duration: Duration(minutes: 5), startTime: DateTime.now()));
+    sessions.add(Session(id: 2, duration: Duration(minutes: 10), startTime: DateTime.now()));
 
     //EventExporter eventsExporter = EventExporter();
     //exportResults = eventsExporter.toList(events);
-    exportResults = modelToList<Event>(events, headers, (entry) {
+    exportResults = modelToList<Session>(sessions, headers, (ses) {
       List result = List();
-      result.add(entry.id);
-      result.add(entry.eventType);
-      result.add(entry.timeStamp);
+      result.add(ses.id);
+      result.add(ses.duration);
+      result.add(ses.startTime);
       return result;
     });
   });
@@ -39,8 +39,8 @@ void main() {
   test('EventsExporter.toList returns ordered entries', () {
     expect(exportResults.length, 3);
     expect(exportResults[0], headers);
-    expect(exportResults[1], orderedEquals([1, 'locking', isA<DateTime>()]));
-    expect(exportResults[2], orderedEquals([2, 'unlocked', isA<DateTime>()]));
+    expect(exportResults[1], orderedEquals([1, isA<Duration>(), isA<DateTime>()]));
+    expect(exportResults[2], orderedEquals([2, isA<Duration>(), isA<DateTime>()]));
   });
   
   test('create csv format from List', () {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 //import 'package:unplugg_prototype/blocs/session_state_bloc.dart';
-import 'package:unplugg_prototype/data/database.dart';
-import 'package:unplugg_prototype/data/models.dart';
+import 'package:unplugg_prototype/core/data/database.dart';
+import 'package:unplugg_prototype/core/data/models/session.dart';
 
 class SessionsTab extends StatelessWidget {
 
@@ -36,7 +36,7 @@ class SessionsTab extends StatelessWidget {
                     return ListTile(
                       leading: Icon(Icons.event),
                       title: Text('Session ${sessionEntry.id}'),
-                      subtitle: Text('${sessionEntry.duration.inMinutes}m ${sessionEntry.finishReason}\n${sessionEntry.startTime.toLocal()} - ${sessionEntry.finishTime.toLocal()}'),
+                      subtitle: Text('${sessionEntry}'),
                       isThreeLine: true,
                     );
                   });

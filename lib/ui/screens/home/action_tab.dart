@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 
 class ActionTab extends StatefulWidget {
   ActionTab({Key key}) : super(key: key);
@@ -8,7 +10,7 @@ class ActionTab extends StatefulWidget {
 }
 
 class SessionDuration {
-  static const DEBUG = 5; // for debugging
+  static const DEBUG = 1; // for debugging
   static const FIFTEEN = 15;
   static const THIRTY = 30;
   static const FORTYFIVE = 45;
@@ -20,15 +22,19 @@ class _ActionState extends State<ActionTab> {
   int _selectedDuration = SessionDuration.THIRTY;
 
   Widget SessionButton(BuildContext context) {
-    return Container(
-      child: IconButton(
-        iconSize: 250.0,
-        icon: ImageIcon(AssetImage('assets/logo.png')),
-        color: Colors.green,
-        onPressed: () async {;
-          Navigator.pushNamed(context, '/session', arguments: Duration(minutes: _selectedDuration));
-        },
-      ),
+    return Consumer<SessionStateBloc>(
+      builder: (context, bloc, child) {
+        return Container(
+          child: IconButton(
+            iconSize: 250.0,
+            icon: ImageIcon(AssetImage('assets/logo.png')),
+            color: Colors.green,
+            onPressed: () async {
+              bloc.start(duration: Duration(minutes: _selectedDuration));
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -48,7 +54,7 @@ class _ActionState extends State<ActionTab> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             _SessionRadio(
-              label: '5m (debug)',
+              label: '1m (debug)',
               value: SessionDuration.DEBUG,
               groupValue: _selectedDuration,
               onChanged: (sessionDuration) {

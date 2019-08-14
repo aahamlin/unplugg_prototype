@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'phone_event_state.dart';
+import 'package:unplugg_prototype/core/services/phone_event/phone_event_state.dart';
 
 class PhoneEventModel {
   PhoneEventModel(this._name);

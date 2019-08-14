@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:unplugg_prototype/bloc/session_state_bloc.dart';
-import 'package:unplugg_prototype/shared/utilities.dart';
+import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
+import 'package:unplugg_prototype/core/shared/utilities.dart';
 
 /*class SessionNotificationDetails {
   int sessionId;
@@ -52,9 +52,10 @@ class NotificationManager {
   }
 
   Future<void> showMomentsExpiringNotification(
-      DateTime expiry,
-      DateTime scheduledTime) async {
+      Duration expiry,
+      Duration notify) async {
     print('Schedule moments expiring notification');
+    var scheduledTime = DateTime.now().add(notify);
     var notificationId = MOMENTS_EXPIRING_ID;
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
@@ -66,7 +67,7 @@ class NotificationManager {
     await flutterLocalNotificationsPlugin.schedule(
       notificationId,
       'Unplugg Expiration Warning',
-      'Your session will expire at ${expiry.toString()}.',
+      'Your session will expire in ${expiry.inSeconds} seconds.',
       scheduledTime,
       platformChannelSpecifics,
       //payload: jsonEncode(sessionNotificationDetails.toJson()),
@@ -89,13 +90,8 @@ class NotificationManager {
   }
 
   Future<void> onSelectNotification(String payload) async {
-    //var details = SessionNotificationDetails.fromJson(jsonDecode(payload));
-
-    await Navigator.pushNamed(
-        null,
-        '/session',
-        //arguments: SessionModel(id: details.sessionId)
-    );
+   // todo: Scan for running session or provide session id in payload?
+    debugPrint('User tapped selection');
   }
 
   Future<void> onDidReceiveLocalNotification(int id, String title, String body,

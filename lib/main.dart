@@ -4,24 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:unplugg_prototype/provider_setup.dart';
 import 'package:unplugg_prototype/router.dart';
-import 'package:unplugg_prototype/shared/notifications.dart';
+import 'package:unplugg_prototype/core/services/notifications.dart';
 
 void main() async {
-
-  // todo: returned to session all existing session, regardless of notification
-
   var notificationManager = NotificationManager();
   notificationManager.configureLocalNotifications();
-//
-  var notificationAppLaunchDetails =
-    await notificationManager.getNotificationAppLaunchDetails();
-//
-  if(notificationAppLaunchDetails.didNotificationLaunchApp) {
-//    var details = SessionNotificationDetails.fromJson(
-//        jsonDecode(notificationAppLaunchDetails.payload));
-    Router.initialRoute = RouteNames.SESSION;
-  }
-
+//  var notificationAppLaunchDetails =
+//    await notificationManager.getNotificationAppLaunchDetails();
   runApp(MyApp());
 
 }

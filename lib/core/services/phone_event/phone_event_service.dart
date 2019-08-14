@@ -1,8 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
-import 'phone_event_state.dart';
-
-import 'phone_event_model.dart';
+import 'package:unplugg_prototype/core/services/phone_event/phone_event_model.dart';
+import 'package:unplugg_prototype/core/services/phone_event/phone_event_observer.dart';
 
 class PhoneEventService {
 
@@ -53,11 +51,4 @@ class PhoneEventService {
       observer.onPhoneEvent(event);
     }
   }
-}
-
-
-abstract class PhoneEventObserver {
-
-  void onPhoneEvent(PhoneEventModel event);
-
 }
