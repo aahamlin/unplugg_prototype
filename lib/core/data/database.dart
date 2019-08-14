@@ -107,6 +107,7 @@ class DBProvider {
       where: '$columnResult IS NULL');
 
     if(res.isNotEmpty) {
+      // todo: some error situations have caused this assert, investigate
       assert(res.length == 1);// if ever more than one, there is a programming error
       return Session.fromMap(res.first);
     }

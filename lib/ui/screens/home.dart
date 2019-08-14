@@ -53,14 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
           case SessionViewState.running:
             Navigator.pushNamed(context, RouteNames.SESSION, arguments: vm);
             break;
-//          case SessionViewState.failed:
-//            var snackbar = SnackBar(content: Text('Session failed: ${vm}'));
-//            Scaffold.of(context).showSnackBar(snackbar);
-//            break;
-//          case SessionViewState.succeeded:
-//            var snackbar = SnackBar(content: Text('Session succeeded: ${vm}'));
-//            Scaffold.of(context).showSnackBar(snackbar);
-//            break;
           default:
             debugPrint('Home screen: ${vm.state}');
         }
@@ -117,7 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],*/
         ),
-        body: Center(child: _widgetOptions.elementAt(_selectedIndex),
+        body: Center(
+            child: _widgetOptions.elementAt(_selectedIndex)
         ),
         bottomNavigationBar: BottomNavigationBar(
             items: const <BottomNavigationBarItem>[

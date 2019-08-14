@@ -56,6 +56,7 @@ class NotificationManager {
       Duration notify) async {
     print('Schedule moments expiring notification');
     var scheduledTime = DateTime.now().add(notify);
+    var remainingExpiry = expiry - notify;
     var notificationId = MOMENTS_EXPIRING_ID;
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
@@ -67,7 +68,7 @@ class NotificationManager {
     await flutterLocalNotificationsPlugin.schedule(
       notificationId,
       'Unplugg Expiration Warning',
-      'Your session will expire in ${expiry.inSeconds} seconds.',
+      'Your session will expire in ${remainingExpiry.inSeconds} seconds.',
       scheduledTime,
       platformChannelSpecifics,
       //payload: jsonEncode(sessionNotificationDetails.toJson()),
@@ -81,7 +82,7 @@ class NotificationManager {
 
 
   Future<void> showMomentsEarnedNotification() async {
-    // todo: implement
+    // todo: implement moments earned notification
     throw UnimplementedError();
   }
 

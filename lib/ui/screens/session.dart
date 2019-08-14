@@ -124,7 +124,17 @@ class SessionScreen extends StatelessWidget {
     var expiry = Duration(seconds: 45);
     var notify = Duration(seconds: 15);
 
-    notificationManager.showMomentsExpiringNotification(expiry, notify);
+    var endTime = vm.startTime.add(vm.duration);
+    var durationToEnd = endTime.difference(DateTime.now());
+    if (durationToEnd < expiry) {
+      expiry = durationToEnd;
+    }
+    if (durationToEnd > notify) {
+      notificationManager.showMomentsExpiringNotification(expiry, notify);
+    } else {
+      debugPrint('Less than ${notify.inSeconds} remaining, skip notification');
+    }
+
     int count = await bloc.setExpiryOnSession(vm, expiry);
     if (count > 2) {
       notificationManager.cancelMomentsExpiringNotification();

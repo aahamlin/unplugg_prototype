@@ -22,22 +22,16 @@ class SessionStateBloc extends BlocBase<SessionViewModel> {
     // kick off app in running session, allow session page to complete
     if (session != null) {
       var sessionEndTime = session.startTime.add(session.duration);
-
+      final vm = SessionViewModel(
+        id: session.id,
+        startTime: session.startTime,
+        duration: session.duration,
+        state: SessionViewState.running,
+      );
       if (DateTime.now().isAfter(sessionEndTime)) {
-        final vm = SessionViewModel(
-          id: session.id,
-          startTime: session.startTime,
-          duration: session.duration,
-        );
         return complete(vm);
       }
       else {
-        final vm = SessionViewModel(
-          id: session.id,
-          startTime: session.startTime,
-          duration: session.duration,
-          state: SessionViewState.running,
-        );
         this.inSink.add(vm);
       }
     }
