@@ -28,7 +28,7 @@ class Expiry {
   Expiry({
     this.id,
     @required this.session_fk,
-    @required this.expiry,
+    this.expiry,
     this.cancelled = false,
   });
 

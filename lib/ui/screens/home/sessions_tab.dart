@@ -15,33 +15,27 @@ class SessionsTab extends StatelessWidget {
       initialData: List<Session>(),
       future: dbProvider.getAllSessions(),
       builder: (context, snapshot) {
-        switch(snapshot.connectionState) {
-          case ConnectionState.none:
-          case ConnectionState.waiting:
-          case ConnectionState.active:
-            return CircularProgressIndicator();
-          case ConnectionState.done:
-            if (snapshot.hasError) {
-              return Text('${snapshot.error}');
-            }
-            else {
-              var sessionList = snapshot.data;
+        if (snapshot.hasError) {
+          return Text('${snapshot.error}');
+        }
+        else if (snapshot.hasData) {
+          var sessionList = snapshot.data;
+          return ListView.builder(
+            itemCount: sessionList.length,
+            itemBuilder: (context, index) {
 
-              return ListView.builder(
-                  itemCount: sessionList.length,
-                  itemBuilder: (context, index) {
+              var sessionEntry = sessionList[index];
 
-                    var sessionEntry = sessionList[index];
-
-                    return ListTile(
-                      leading: Icon(Icons.event),
-                      title: Text('Session ${sessionEntry.id}'),
-                      subtitle: Text('${sessionEntry}'),
-                      isThreeLine: true,
-                    );
-                  });
-            }
-
+              return ListTile(
+                leading: Icon(Icons.event),
+                title: Text('Session ${sessionEntry.id}'),
+                subtitle: Text('${sessionEntry}'),
+                isThreeLine: true,
+              );
+            });
+        }
+        else {
+          return CircularProgressIndicator();
         }
       },
     );

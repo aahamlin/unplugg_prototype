@@ -1,9 +1,7 @@
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
-import 'package:unplugg_prototype/core/shared/utilities.dart';
 
 /*class SessionNotificationDetails {
   int sessionId;
@@ -27,7 +25,9 @@ class NotificationManager {
   factory NotificationManager() => _instance;
 
   static const MOMENTS_EXPIRING_ID = 0;
-  static const MOMENTS_EARNED_ID = 1;
+  static const MOMENTS_EXPIRING_INTERRUPT_ID = 1;
+  static const MOMENTS_EXPIRING_FAILED_ID = 2;
+  static const MOMENTS_EARNED_ID = 3;
 
   static final NotificationManager _instance = NotificationManager.private();
 
@@ -57,7 +57,7 @@ class NotificationManager {
     print('Schedule moments expiring notification');
     var scheduledTime = DateTime.now().add(notify);
     var remainingExpiry = expiry - notify;
-    var notificationId = MOMENTS_EXPIRING_ID;
+
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
         'Unplugg Prototype Notifications',
@@ -66,7 +66,7 @@ class NotificationManager {
     var platformChannelSpecifics = new NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.schedule(
-      notificationId,
+      MOMENTS_EXPIRING_ID,
       'Unplugg Expiration Warning',
       'Your session will expire in ${remainingExpiry.inSeconds} seconds.',
       scheduledTime,
@@ -80,6 +80,42 @@ class NotificationManager {
     await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_ID);
   }
 
+  Future<void> showSessionInterruptNotification() async {
+    var scheduledTime = DateTime.now().add(Duration(seconds: 1));
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
+        'Unplugg Prototype Notifications',
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.schedule(
+      MOMENTS_EXPIRING_INTERRUPT_ID,
+      'Unplugg Session Warning',
+      'Did you get distracted? Interrupting your session once more will terminate it.',
+      scheduledTime,
+      platformChannelSpecifics,
+      //payload: jsonEncode(sessionNotificationDetails.toJson()),
+    );
+  }
+  Future<void> showSessionFailedNotification() async {
+    var scheduledTime = DateTime.now().add(Duration(seconds: 1));
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+        'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
+        'Unplugg Prototype Notifications',
+        importance: Importance.Max, priority: Priority.High);
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.schedule(
+      MOMENTS_EXPIRING_FAILED_ID,
+      'Unplugg Session Failed',
+      'You interrupted your session.',
+      scheduledTime,
+      platformChannelSpecifics,
+      //payload: jsonEncode(sessionNotificationDetails.toJson()),
+    );
+  }
 
   Future<void> showMomentsEarnedNotification() async {
     // todo: implement moments earned notification

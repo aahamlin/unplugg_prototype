@@ -2,21 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
-//import 'package:unplugg_prototype/core/services/phone_event/phone_event_model.dart';
 import 'package:unplugg_prototype/router.dart';
 
-import 'package:unplugg_prototype/core/data/database.dart';
-//import 'package:unplugg_prototype/core/data/models.dart';
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/core/services/notifications.dart';
 import 'package:unplugg_prototype/ui/widgets/session_timer.dart';
 import 'package:unplugg_prototype/core/shared/utilities.dart';
-//import 'package:unplugg_prototype/shared/session_model.dart';
 import 'package:unplugg_prototype/ui/widgets/stream_listener.dart';
 import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
-//import 'package:unplugg_prototype/core/services/phone_event/phone_event_service.dart';
-
-
 
 class SessionScreen extends StatelessWidget {
 
@@ -121,8 +114,8 @@ class SessionScreen extends StatelessWidget {
   }
 
   _setExpiryNotification(SessionStateBloc bloc, SessionViewModel vm) async {
-    var expiry = Duration(seconds: 45);
-    var notify = Duration(seconds: 15);
+    var expiry = Duration(seconds: 15);
+    var notify = Duration(seconds: 3);
 
     var endTime = vm.startTime.add(vm.duration);
     var durationToEnd = endTime.difference(DateTime.now());
@@ -138,7 +131,12 @@ class SessionScreen extends StatelessWidget {
     int count = await bloc.setExpiryOnSession(vm, expiry);
     if (count > 2) {
       notificationManager.cancelMomentsExpiringNotification();
+      notificationManager.showSessionFailedNotification();
       bloc.fail(vm);
+    }
+    else if (count > 1) {
+      notificationManager.cancelMomentsExpiringNotification();
+      notificationManager.showSessionInterruptNotification();
     }
   }
 

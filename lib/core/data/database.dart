@@ -164,6 +164,7 @@ class DBProvider {
     var res = await db.query(tableRunExpiry,
         where: '$columnSessionFK = ?', whereArgs: [session_fk]);
 
+    // todo: get active expiration notices
     List<Expiry> listOfRunExpiry = res.isNotEmpty
         ? res.map((e) => Expiry.fromMap(e)).toList()
         : [];
