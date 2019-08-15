@@ -1,4 +1,4 @@
-
+import 'package:flutter/foundation.dart';
 
 enum SessionViewState {
   running,
@@ -15,10 +15,10 @@ class SessionViewModel {
   final SessionViewState state;
 
   SessionViewModel({
-    this.id,
-    this.startTime,
-    this.duration,
-    this.state,
+    @required this.id,
+    @required this.startTime,
+    @required this.duration,
+    @required this.state,
   });
 
   @override toString() {

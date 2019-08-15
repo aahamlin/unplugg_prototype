@@ -4,9 +4,15 @@ import 'package:unplugg_prototype/core/data/models/session.dart';
 
 void main() {
 
+  DateTime _dateTimeField;
+  setUp(() {
+    _dateTimeField = DateTime.now();
+  });
+
   test('Session.fromMap', () {
     var session = Session.fromMap({
       columnDuration: Duration(minutes: 1).inMilliseconds,
+      columnStart: _dateTimeField.millisecondsSinceEpoch,
     });
 
     expect(session, isA<Session>());
@@ -16,7 +22,7 @@ void main() {
     var session = Session.fromMap({
       columnDuration: Duration(minutes: 1).inMilliseconds,
       columnId: null,
-      columnStart: null,
+      columnStart: _dateTimeField.millisecondsSinceEpoch,
       columnResult: null,
       columnReason: null,
     });
