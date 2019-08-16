@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -60,7 +60,7 @@ class DBProvider {
 
   _setupDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "unplugg_prototype.db");
+    String path = p.join(documentsDirectory.path, "unplugg_prototype.db");
     return await openDatabase(path, version: 1,
         onOpen: openDB,
         onUpgrade: upgradeDB,
@@ -76,7 +76,6 @@ class DBProvider {
   }
 
   void initDB(Database db, int version) async {
-    print('initDB enter');
     await db.execute(createSessionTableSQL);
     await db.execute(createRunTableSQL);
   }

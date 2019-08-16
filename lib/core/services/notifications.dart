@@ -81,6 +81,8 @@ class NotificationManager {
   }
 
   Future<void> showSessionInterruptNotification() async {
+    print('Schedule session interrupted notification');
+
     var scheduledTime = DateTime.now().add(Duration(seconds: 1));
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
@@ -98,7 +100,15 @@ class NotificationManager {
       //payload: jsonEncode(sessionNotificationDetails.toJson()),
     );
   }
+
+  Future<void> cancelSessionInterruptedNotification() async {
+    print('Cancel session interrupted notification');
+    await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_INTERRUPT_ID);
+  }
+
   Future<void> showSessionFailedNotification() async {
+    print('Schedule session failed notification');
+
     var scheduledTime = DateTime.now().add(Duration(seconds: 1));
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',

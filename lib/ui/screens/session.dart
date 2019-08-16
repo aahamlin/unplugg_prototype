@@ -130,7 +130,7 @@ class SessionScreen extends StatelessWidget {
 
     int count = await bloc.setExpiryOnSession(vm, expiry);
     if (count > 2) {
-      notificationManager.cancelMomentsExpiringNotification();
+      notificationManager.cancelSessionInterruptedNotification();
       notificationManager.showSessionFailedNotification();
       bloc.fail(vm);
     }
@@ -142,6 +142,8 @@ class SessionScreen extends StatelessWidget {
 
   _cancelExpiryNotification(SessionStateBloc bloc, SessionViewModel vm) async {
     notificationManager.cancelMomentsExpiringNotification();
+    notificationManager.cancelSessionInterruptedNotification();
+
     bloc.cancelExpiryOnSession(vm);
   }
 
