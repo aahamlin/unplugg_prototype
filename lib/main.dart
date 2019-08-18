@@ -1,15 +1,23 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:unplugg_prototype/core/shared/log_manager.dart';
+import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/provider_setup.dart';
 import 'package:unplugg_prototype/router.dart';
 import 'package:unplugg_prototype/core/services/notifications.dart';
 
 void main() async {
+
+  var databaseProvider = DBProvider();
+  var logger = LogManager.getLogger('main');
+
   var notificationManager = NotificationManager();
   notificationManager.configureLocalNotifications();
 //  var notificationAppLaunchDetails =
 //    await notificationManager.getNotificationAppLaunchDetails();
+
+  logger.i('app starting');
   runApp(MyApp());
 
 }

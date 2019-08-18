@@ -1,12 +1,12 @@
-import 'package:flutter/foundation.dart';
-
+import 'package:meta/meta.dart';
 import '../database_schema.dart';
 
-class Expiry {
+class Interrupt {
 
   int id;
   int session_fk;
-  DateTime expiry;
+  DateTime timeout;
+  String name;
   bool cancelled;
 
   /**
@@ -16,7 +16,8 @@ class Expiry {
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       columnSessionFK: session_fk,
-      columnExpiry: expiry.millisecondsSinceEpoch,
+      columnTimeout: timeout.millisecondsSinceEpoch,
+      columnName: name,
       columnCancelled: cancelled? 1: 0,
     };
     if (id != null) {
@@ -25,20 +26,22 @@ class Expiry {
     return map;
   }
 
-  Expiry({
+  Interrupt({
     this.id,
     @required this.session_fk,
-    this.expiry,
+    this.timeout,
+    this.name,
     this.cancelled = false,
   });
 
   /**
    * Transform from Map to Object from Database queries
    */
-  Expiry.fromMap(Map<String, dynamic> map) {
+  Interrupt.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
     session_fk = map[columnSessionFK];
-    expiry = DateTime.fromMillisecondsSinceEpoch(map[columnExpiry]);
+    name = map[columnName];
+    timeout = DateTime.fromMillisecondsSinceEpoch(map[columnTimeout]);
     cancelled = (map[columnCancelled] == 1 ? true : false);
   }
 

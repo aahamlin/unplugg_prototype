@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:unplugg_prototype/core/shared/log_manager.dart';
 import 'package:unplugg_prototype/core/services/phone_event/phone_event_observer.dart';
 import 'timer_text.dart';
 
@@ -25,6 +26,8 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   Timer _timer;
   Stopwatch _stopwatch;
 
+  final _logger = LogManager.getLogger('SessionTimerState');
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +51,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _logger.i('applifecycle state change: $state');
     // on pause, set expiry on run table and notification
     if (state == AppLifecycleState.paused) {;
       widget.onSessionWarn();
@@ -61,6 +65,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
 
   @override
   void onPhoneEvent(PhoneEventModel phoneEvent) {
+    _logger.i('phoneevent state change: ${phoneEvent.state}');
     // on unlock, set expiry on run table and notification
     if (phoneEvent.state == PhoneEventState.unlocked) {
       widget.onSessionWarn();

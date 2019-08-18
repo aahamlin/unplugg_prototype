@@ -8,7 +8,7 @@ import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/core/services/notifications.dart';
 import 'package:unplugg_prototype/ui/widgets/session_timer.dart';
 import 'package:unplugg_prototype/core/shared/utilities.dart';
-import 'package:unplugg_prototype/ui/widgets/stream_listener.dart';
+import 'package:unplugg_prototype/ui/widgets/bloc_listener.dart';
 import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
 
 class SessionScreen extends StatelessWidget {
@@ -21,9 +21,9 @@ class SessionScreen extends StatelessWidget {
   @override Widget build(BuildContext context) {
     final SessionStateBloc sessionStateBloc = Provider.of<SessionStateBloc>(context);
 
-    return StreamListener(
-      stream: sessionStateBloc.stream,
-      listener: (vm) {
+    return BlocListener(
+      bloc: sessionStateBloc,
+      listener: (context, vm) {
         debugPrint('Session screen listener: ${vm}');
         switch(vm.state) {
           case SessionViewState.succeeded:
@@ -128,7 +128,7 @@ class SessionScreen extends StatelessWidget {
       debugPrint('Less than ${notify.inSeconds} remaining, skip notification');
     }
 
-    int count = await bloc.setExpiryOnSession(vm, expiry);
+    int count = await bloc.setInterruptOnSession(vm, expiry);
     if (count > 2) {
       notificationManager.cancelSessionInterruptedNotification();
       notificationManager.showSessionFailedNotification();
@@ -144,7 +144,7 @@ class SessionScreen extends StatelessWidget {
     notificationManager.cancelMomentsExpiringNotification();
     notificationManager.cancelSessionInterruptedNotification();
 
-    bloc.cancelExpiryOnSession(vm);
+    bloc.cancelInterruptOnSession(vm);
   }
 
 }

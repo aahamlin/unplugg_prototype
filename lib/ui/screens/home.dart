@@ -10,11 +10,12 @@ import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
 //import 'package:unplugg_prototype/data/exporter.dart';
 
-import 'package:unplugg_prototype/ui/widgets/stream_listener.dart';
+import 'package:unplugg_prototype/ui/widgets/bloc_listener.dart';
 
 import 'package:unplugg_prototype/ui/screens/home/sessions_tab.dart';
 import 'package:unplugg_prototype/ui/screens/home/action_tab.dart';
 import 'package:unplugg_prototype/ui/screens/home/user_tab.dart';
+import 'package:unplugg_prototype/ui/screens/home/logs_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key key}) : super(key: key);
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static List<Widget> _widgetOptions = <Widget>[
     SessionsTab(),
     ActionTab(),
-    UserTab(),
+    LogsTab(),
   ];
 
   void _onItemTapped(int index) {
@@ -45,9 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final sessionStateBloc = Provider.of<SessionStateBloc>(context);
   // todo: display toast from VM when in success or failure state
-    return StreamListener(
-      stream: sessionStateBloc.stream,
-      listener: (vm) {
+    return BlocListener(
+      bloc: sessionStateBloc,
+      listener: (context, vm) {
         debugPrint('Home screen listener: ${vm}');
         switch(vm.state) {
           case SessionViewState.running:
@@ -123,8 +124,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text('Unplugg', style: _optionStyle),
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.account_box),
-                title: Text('User', style: _optionStyle),
+                icon: Icon(Icons.list),
+                title: Text('Log', style: _optionStyle),
               )
             ],
           currentIndex: _selectedIndex,

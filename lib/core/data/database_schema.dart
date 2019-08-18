@@ -9,24 +9,44 @@ const String columnReason = "reason";
 
 const String createSessionTableSQL = '''
 CREATE TABLE $tableSession (
-    $columnId integer primary key autoincrement,
-    $columnDuration integer not null,
-    $columnStart integer,
-    $columnResult text,
-    $columnReason text);
+    $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
+    $columnDuration INTEGER NOT NULL,
+    $columnStart INTEGER,
+    $columnResult TEXT,
+    $columnReason TEXT
+);
 ''';
 
-const String tableRunExpiry = "runexpiry";
+const String tableInterrupts = "interrupts";
 const String columnSessionFK = "session_fk";
-const String columnExpiry = "expiry";
+const String columnTimeout = "timeout";
+const String columnName = "name";
 const String columnCancelled = "cancelled";
 
-const String createRunTableSQL = '''
-CREATE TABLE $tableRunExpiry (
-    $columnId integer primary key autoincrement,
-    $columnSessionFK integer not null,
-    $columnExpiry integer,
-    $columnCancelled integer not null default(0),
+const String createInterruptsTableSQL = '''
+CREATE TABLE $tableInterrupts (
+    $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
+    $columnSessionFK INTEGER NOT NULL,
+    $columnName TEXT,
+    $columnTimeout INTEGER,
+    $columnCancelled INTEGER NOT NULL DEFAULT(0),
     FOREIGN KEY($columnSessionFK)
-    REFERENCES $tableSession($columnId));
+    REFERENCES $tableSession($columnId)
+);
+''';
+
+const String tableLogs = 'logs';
+const String columnLevel = 'level';
+const String columnTimestamp = 'time';
+const String columnMessage = 'msg';
+const String columnError = 'error';
+
+const String createLogsTableSQL = '''
+CREATE TABLE $tableLogs (
+    $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
+    $columnLevel INTEGER NOT NULL,
+    $columnTimestamp INTEGER NOT NULL,
+    $columnMessage TEXT NOT NULL,
+    $columnError TEXT
+);
 ''';
