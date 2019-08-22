@@ -33,7 +33,6 @@ class _BlocListenerState<B extends BlocBase<T>, T>
   void initState() {
     super.initState();
     _logger = LogManager.getLogger('BlocListener');
-    _logger.d('initState');
     _bloc = widget.bloc ?? Provider.of<B>(context);
     _previousState = _bloc?.currentState;
     _subscribe();
@@ -41,7 +40,6 @@ class _BlocListenerState<B extends BlocBase<T>, T>
 
   @override
   void dispose() {
-    _logger.d('dispose');
     _unsubscribe();
     super.dispose();
   }
@@ -74,6 +72,7 @@ class _BlocListenerState<B extends BlocBase<T>, T>
     if (_bloc?.stream != null) {
       _subscription = _bloc.stream.listen((T event) {
         // todo: add conditional compare values?
+        _logger.d('notifying listeners of $event');
         widget.listener(context, event);
         _previousState = event;
       });

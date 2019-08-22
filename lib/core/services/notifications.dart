@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:unplugg_prototype/core/shared/log_manager.dart';
 
 /*class SessionNotificationDetails {
   int sessionId;
@@ -35,6 +36,8 @@ class NotificationManager {
 
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
+  final _logger = LogManager.getLogger('NotificationManager');
+
   void configureLocalNotifications() {
     // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
     var initializationSettingsAndroid =
@@ -54,7 +57,7 @@ class NotificationManager {
   Future<void> showMomentsExpiringNotification(
       Duration expiry,
       Duration notify) async {
-    print('Schedule moments expiring notification');
+    _logger.d('Schedule moments expiring notification');
     var scheduledTime = DateTime.now().add(notify);
     var remainingExpiry = expiry - notify;
 
@@ -76,12 +79,12 @@ class NotificationManager {
   }
 
   Future<void> cancelMomentsExpiringNotification() async {
-    print('Cancel moments expiring notification');
+    _logger.d('Cancel moments expiring notification');
     await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_ID);
   }
 
   Future<void> showSessionInterruptNotification() async {
-    print('Schedule session interrupted notification');
+    _logger.d('Schedule session interrupted notification');
 
     var scheduledTime = DateTime.now().add(Duration(seconds: 1));
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
@@ -102,12 +105,12 @@ class NotificationManager {
   }
 
   Future<void> cancelSessionInterruptedNotification() async {
-    print('Cancel session interrupted notification');
+    _logger.d('Cancel session interrupted notification');
     await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_INTERRUPT_ID);
   }
 
   Future<void> showSessionFailedNotification() async {
-    print('Schedule session failed notification');
+    _logger.d('Schedule session failed notification');
 
     var scheduledTime = DateTime.now().add(Duration(seconds: 1));
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
@@ -133,17 +136,18 @@ class NotificationManager {
   }
 
   Future<void> _cancelAllNotifications() async {
+    _logger.d('Cancel all notifications');
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 
   Future<void> onSelectNotification(String payload) async {
    // todo: Scan for running session or provide session id in payload?
-    debugPrint('User tapped selection');
+    _logger.i('User tapped notification');
   }
 
   Future<void> onDidReceiveLocalNotification(int id, String title, String body,
       String payload) async {
-    print('iOS local notification: ' + payload);
+    _logger.d('iOS local notification: $payload');
     //var details = SessionNotificationDetails.fromJson(jsonDecode(payload));
     // display a dialog with the notification details, tap ok to go to another page
     await showDialog(

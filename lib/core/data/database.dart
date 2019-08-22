@@ -12,17 +12,17 @@ import 'models/session.dart';
 import 'models/interrupt.dart';
 import 'models/log_entry.dart';
 
-class DBProvider {
+class DBManager {
 
-  factory DBProvider() => _instance;
+  factory DBManager() => _instance;
 
-  static final DBProvider _instance = DBProvider._private();
+  static final DBManager _instance = DBManager._private();
 
   static Database _database;
 
   final _setupDatabaseMemoizer = AsyncMemoizer<Database>();
 
-  DBProvider._private();
+  DBManager._private();
 
   Future<Database> get database async {
     if (_database != null) return _database;

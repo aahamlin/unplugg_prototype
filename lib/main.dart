@@ -9,7 +9,7 @@ import 'package:unplugg_prototype/core/services/notifications.dart';
 
 void main() async {
 
-  var databaseProvider = DBProvider();
+  var databaseProvider = DBManager();
   var logger = LogManager.getLogger('main');
 
   var notificationManager = NotificationManager();
@@ -19,7 +19,6 @@ void main() async {
 
   logger.i('app starting');
   runApp(MyApp());
-
 }
 class MyApp extends StatelessWidget {
   

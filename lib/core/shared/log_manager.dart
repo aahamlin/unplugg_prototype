@@ -37,7 +37,7 @@ final _logLevelStr = {
 
 class NamedPrinter extends LogPrinter {
   final String name;
-  final _dbMgr = DBProvider();
+  final _dbMgr = DBManager();
 
   NamedPrinter(this.name);
 

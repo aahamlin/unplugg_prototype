@@ -12,9 +12,9 @@ import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
 class SessionStateBloc extends BlocBase<SessionViewModel> {
 
   final _logger = LogManager.getLogger('SessionStateBloc');
-  final DBProvider dbProvider;
+  final DBManager dbProvider;
 
-  SessionStateBloc({DBProvider this.dbProvider}) {
+  SessionStateBloc({DBManager this.dbProvider}) {
     _scan();
   }
 
@@ -132,20 +132,21 @@ class SessionStateBloc extends BlocBase<SessionViewModel> {
   }
 
   Future<int> setInterruptOnSession(SessionViewModel vm, Duration expiry) async {
-    _logger.i('interrupting: ${vm}');
-    var expireTime = DateTime.now().add(expiry);
-    var runExpiry = Interrupt(session_fk: vm.id, timeout: expireTime);
-    var expiryWarnings = await dbProvider.insertExpiryWarning(runExpiry);
-    return expiryWarnings.length;
+    _logger.d('interrupting: ${vm}');
+    var timeout = DateTime.now().add(expiry);
+    var interrupt = Interrupt(session_fk: vm.id, timeout: timeout);
+    var interruptEvents = await dbProvider.insertExpiryWarning(interrupt);
+    _logger.i('interrupted session ${interruptEvents.length} time(s)');
+    return interruptEvents.length;
   }
 
   Future<void> cancelInterruptOnSession(SessionViewModel vm) async {
     _logger.i('cancelling interrupt: ${vm}');
-    var runExpiry = Interrupt(session_fk: vm.id);
-    var listOfInterrupts = await dbProvider.cancelExpiryWarning(runExpiry);
-    if (listOfInterrupts.isNotEmpty) {
-      debugPrint(
-          'cancelled ${listOfInterrupts.last} of ${listOfInterrupts.length}');
+    var interrupt = Interrupt(session_fk: vm.id);
+    var interruptEvents = await dbProvider.cancelExpiryWarning(interrupt);
+    if (interruptEvents.isNotEmpty) {
+      _logger.i(
+          'cancelled ${interruptEvents.last} of ${interruptEvents.length}');
     }
   }
 

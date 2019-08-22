@@ -9,7 +9,7 @@ class LogsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DBProvider dbProvider = Provider.of(context);
+    DBManager dbProvider = Provider.of(context);
 
     return FutureBuilder<List<LogEntry>>(
       initialData: List<LogEntry>(),
@@ -26,9 +26,21 @@ class LogsTab extends StatelessWidget {
 
               var logEntry = logs[index];
 
+              var title = '${logEntry.timeStamp} ${logEntry.level}';
+              var errStr = logEntry.error != null ? ' ERROR ${logEntry.error}' : '';
+              var body = '${logEntry.message}$errStr';
+
               return Container(
                 padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                child: Text('$logEntry')
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    Text(title,
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text(body),
+                  ],
+                ),
               );
             });
         }

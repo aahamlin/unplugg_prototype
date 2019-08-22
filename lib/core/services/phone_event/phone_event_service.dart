@@ -1,54 +1,52 @@
 import 'package:flutter/services.dart';
-import 'package:unplugg_prototype/core/services/phone_event/phone_event_model.dart';
-import 'package:unplugg_prototype/core/services/phone_event/phone_event_observer.dart';
+import 'package:meta/meta.dart' show visibleForTesting;
+
+
+enum PhoneState {
+  locking,
+  unlocked,
+  exiting
+}
 
 class PhoneEventService {
 
-  static final PhoneEventService instance = new PhoneEventService._();
-
-  final _eventChannel = EventChannel('unpluggyourself.com/phone_event');
-
-  final List<PhoneEventObserver> _observers = List<PhoneEventObserver>();
-
-  PhoneEventService._() {
-    _eventChannel.receiveBroadcastStream().listen(
-      this._handlePhoneEvent,
-      onError: this._handleError,
-      onDone: this._handleDone,
-    );
+  factory PhoneEventService() {
+    if (_instance == null) {
+      final EventChannel eventChannel =
+        const EventChannel('unpluggyourself.com/phone_event');
+      _instance = PhoneEventService.private(eventChannel);
+    }
+    return _instance;
   }
 
-  void addObserver(PhoneEventObserver o) {
-    _observers.add(o);
+  @visibleForTesting
+  PhoneEventService.private(this._eventChannel);
+
+  static PhoneEventService _instance;
+
+  final EventChannel _eventChannel;
+  Stream<PhoneState> _onPhoneStateChanged;
+
+  Stream<PhoneState> get onPhoneStateChanged {
+    if(_onPhoneStateChanged == null) {
+      _onPhoneStateChanged = _eventChannel
+          .receiveBroadcastStream()
+          .map((dynamic event) => _parsePhoneState(event));
+    }
+
+    return _onPhoneStateChanged;
   }
 
-  void removeObserver(PhoneEventObserver o) {
-    _observers.remove(o);
-  }
-
-  void _handlePhoneEvent(rawEvent) {
-    var event = PhoneEventModel.fromString(rawEvent);
-    print('platform event: ${event.toString()}');
-    _notifyObservers(event);
-
-  }
-
-  void _handleError(error) {
-    print('platform error: $error');
-    //_notifyObservers('error: ${error.toString()}');
-  }
-
-  void _handleDone() {
-    // not sure what, if anything, needs to be done
-    print('platform stream closed');
-    //_notifyObservers('platform stream closed');
-    _observers.clear();
-  }
-
-  void _notifyObservers(PhoneEventModel event) {
-    //_observers.forEach((o) => o.onPhoneEvent(event));
-    for(PhoneEventObserver observer in _observers) {
-      observer.onPhoneEvent(event);
+  PhoneState _parsePhoneState(String state) {
+    switch(state) {
+      case 'locking':
+        return PhoneState.locking;
+      case 'unlocked':
+        return PhoneState.unlocked;
+      case 'exiting':
+        return PhoneState.exiting;
+      default:
+        throw ArgumentError('$state is not valid PhoneState');
     }
   }
 }
