@@ -34,6 +34,7 @@ class LifecycleEventManager {
 
   Event previous;
   Event current;
+  Timer _stateTimer;
 
   void _recordEvent(Event e) {
     previous = current;
@@ -61,21 +62,21 @@ class LifecycleEventManager {
     else if (previous == Event.U && current == Event.P) {
       _controller.sink.add(InterruptEvent(name: 'UP', failImmediate: true));
     }
-    else if (previous == Event.P && pauseInterrupts.contains(current)) {
-      var name = 'P' + describeEnum(current);
-      _controller.sink.add(InterruptEvent(name: name));
-    }
     else if (current == Event.P) {
       debugPrint('timer scheduling due to pause');
-      Timer(Duration(seconds: 1), () {
+      _stateTimer = Timer(Duration(seconds: 1), () {
         debugPrint('timer fired: $previous$current');
         if (current == Event.P) {
-          var name = describeEnum(previous) + 'P';
+          var name = previous != null ? (describeEnum(previous) + 'P') : 'P';
           _controller.sink.add(InterruptEvent(name: name));
         }
       });
     }
   }
+
+  @protected
+  @visibleForTesting
+  Timer get interruptsTimer => _stateTimer;
 
   void addAppLifecycleState(AppLifecycleState state) {
     if(state == AppLifecycleState.paused) {
