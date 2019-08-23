@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:unplugg_prototype/core/lifecycle_event_manager.dart';
+import 'package:unplugg_prototype/core/interrupts.dart';
 import 'package:unplugg_prototype/core/services/phone_event/phone_event_service.dart';
 import 'timer_text.dart';
 
@@ -24,7 +24,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   Timer _timer;
   Stopwatch _stopwatch;
   PhoneEventService _phoneEventService;
-  LifecycleEventManager _lifecycleEventManager;
+  InterruptsManager _lifecycleEventManager;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
     _stopwatch = Stopwatch();
     _stopwatch.start();
     _phoneEventService = PhoneEventService();
-    _lifecycleEventManager = LifecycleEventManager();
+    _lifecycleEventManager = InterruptsManager();
     WidgetsBinding.instance.addObserver(this);
 
     _phoneEventService.onPhoneStateChanged.listen(

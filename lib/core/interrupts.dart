@@ -23,7 +23,7 @@ class InterruptEvent {
   final bool failImmediate;
   InterruptEvent({this.name, this.failImmediate = false});
 }
-class LifecycleEventManager {
+class InterruptsManager {
 
   StreamController<InterruptEvent> _controller =
     StreamController<InterruptEvent>();
