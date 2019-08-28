@@ -5,17 +5,18 @@ import 'package:flutter/foundation.dart';
 import 'package:unplugg_prototype/router.dart';
 
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
-import 'package:unplugg_prototype/core/services/notifications.dart';
+//import 'package:unplugg_prototype/core/services/notifications.dart';
 import 'package:unplugg_prototype/ui/widgets/session_timer.dart';
 import 'package:unplugg_prototype/core/shared/utilities.dart';
 import 'package:unplugg_prototype/ui/widgets/bloc_listener.dart';
 import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
 import 'package:unplugg_prototype/core/shared/log_manager.dart';
+//import 'package:unplugg_prototype/core/interrupts.dart';
 
 class SessionScreen extends StatelessWidget {
 
   final _logger = LogManager.getLogger('SessionScreen');
-  final notificationManager = NotificationManager();
+//  final notificationManager = NotificationManager();
   final SessionViewModel vm;
 
   SessionScreen({Key key, SessionViewModel this.vm}) : super(key: key);
@@ -67,11 +68,7 @@ class SessionScreen extends StatelessWidget {
                         duration: calculateDurationSinceStartTime(
                             vm.startTime,
                             vm.duration),
-                        onInterrupt: (event) {
-                          // todo: bloc should calculate N interrupts to failure
-                          debugPrint('${event.name}');
-                          bloc.fail(vm);
-                        },
+                        interruptsMixin: bloc,
                         onComplete: () => bloc.complete(vm),
                       ),
                     ),

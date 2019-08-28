@@ -24,7 +24,7 @@ void main() {
             textDirection: TextDirection.ltr,
             child: SessionTimer(
                 duration: Duration(seconds: 1),
-                onInterrupt: (event) => null,
+//                onInterrupt: (event) => null,
                 onComplete: () => null))
     );
 

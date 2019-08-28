@@ -12,17 +12,29 @@ import 'models/session.dart';
 import 'models/interrupt.dart';
 import 'models/log_entry.dart';
 
-class DBManager {
+class DBProvider {
 
-  factory DBManager() => _instance;
+  factory DBProvider() {
+    if (_instance == null) {
+      _instance = DBProvider._();
+    }
+    return _instance;
+  }
 
-  static final DBManager _instance = DBManager._private();
+  DBProvider._();
+
+  @visibleForTesting
+  DBProvider.private(String path) {
+    _path = path;
+    _instance = this;
+  }
+
+  static DBProvider _instance;
 
   static Database _database;
+  static String _path;
 
   final _setupDatabaseMemoizer = AsyncMemoizer<Database>();
-
-  DBManager._private();
 
   Future<Database> get database async {
     if (_database != null) return _database;
@@ -33,9 +45,13 @@ class DBManager {
     return _database;
   }
 
-  _setupDatabase() async {
+  Future<String> _dbMobilePath() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = p.join(documentsDirectory.path, "unplugg_prototype.db");
+    return path;
+  }
+  _setupDatabase() async {
+    String path = _path ?? await _dbMobilePath();
     return await openDatabase(path, version: 1,
         onOpen: openDB,
         onUpgrade: upgradeDB,
@@ -102,7 +118,7 @@ class DBManager {
     return null;
   }
 
-  Future<void> updateSession(Session s) async {
+  updateSession(Session s) async {
     final db = await database;
     // session rows only update when finished
     int count = await db.update(
@@ -112,7 +128,7 @@ class DBManager {
     debugPrint('updated $count rows: ${tableSession}(${s})');
   }
 
-  Future<void> deleteExpiry(int session_id) async {
+  deleteExpiry(int session_id) async {
     final db = await database;
     // once updated, delete the run table entries
     int count = await db.delete(tableInterrupts,
@@ -121,7 +137,7 @@ class DBManager {
 
   }
 
-  Future<void> updateSessionAndDeleteExpiry(Session s) async {
+  updateSessionAndDeleteExpiry(Session s) async {
     await updateSession(s);
     await deleteExpiry(s.id);
   }
@@ -160,6 +176,16 @@ class DBManager {
     return listOfRunExpiry;
 
   }
+
+
+  Future<bool> isSessionInterrupted(Session session) async {
+    var sessionEndTime = session.startTime.add(session.duration);
+    var sessionHasExpired = (await getExpiryWarning(session.id))
+        .any((e) => e.cancelled != true && e.timeout.isBefore(sessionEndTime));
+    debugPrint('isSessionInterrupted: ${session} $sessionHasExpired');
+    return sessionHasExpired;
+  }
+
 
   Future<List<Session>> getAllSessions() async {
     final db = await database;

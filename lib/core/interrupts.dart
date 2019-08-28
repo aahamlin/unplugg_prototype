@@ -23,25 +23,22 @@ class InterruptEvent {
   final bool failImmediate;
   InterruptEvent({this.name, this.failImmediate = false});
 }
-class InterruptsManager {
 
-  StreamController<InterruptEvent> _controller =
-    StreamController<InterruptEvent>();
 
-  Stream<InterruptEvent> _onSessionInterrupt;
-
-  Stream<InterruptEvent> get onInterruptEvent => _controller.stream;
+mixin InterruptsMixin {
 
   Event previous;
   Event current;
   Timer _stateTimer;
+
+  void onInterrupt(InterruptEvent event);
+  void onResume();
 
   void _recordEvent(Event e) {
     previous = current;
     current = e;
     _calculate();
   }
-
 
   //States
   //P + L = ok
@@ -54,13 +51,17 @@ class InterruptsManager {
   void _calculate() {
     debugPrint('$previous $current');
     if (current == Event.E) {
-      _controller.sink.add(InterruptEvent(name: 'E', failImmediate: true));
+      onInterrupt(InterruptEvent(name: 'E', failImmediate: true));
     }
     else if (previous == Event.L && current == Event.R) {
-      _controller.sink.add(InterruptEvent(name: 'LR', failImmediate: true));
+      // another app has unlocked the phone before us
+      onInterrupt(InterruptEvent(name: 'LR', failImmediate: true));
     }
     else if (previous == Event.U && current == Event.P) {
-      _controller.sink.add(InterruptEvent(name: 'UP', failImmediate: true));
+      onInterrupt(InterruptEvent(name: 'UP', failImmediate: true));
+    }
+    else if (current == Event.R) {
+      onResume();
     }
     else if (current == Event.P) {
       debugPrint('timer scheduling due to pause');
@@ -68,7 +69,7 @@ class InterruptsManager {
         debugPrint('timer fired: $previous$current');
         if (current == Event.P) {
           var name = previous != null ? (describeEnum(previous) + 'P') : 'P';
-          _controller.sink.add(InterruptEvent(name: name));
+          onInterrupt(InterruptEvent(name: name));
         }
       });
     }

@@ -9,7 +9,7 @@ class LogsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DBManager dbProvider = Provider.of(context);
+    DBProvider dbProvider = Provider.of(context);
 
     return FutureBuilder<List<LogEntry>>(
       initialData: List<LogEntry>(),

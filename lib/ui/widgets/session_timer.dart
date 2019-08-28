@@ -8,11 +8,11 @@ import 'timer_text.dart';
 class SessionTimer extends StatefulWidget {
   final Duration duration;
   final Function onComplete;
-  final Function(InterruptEvent) onInterrupt;
+  final InterruptsMixin interruptsMixin;
   SessionTimer({Key key,
     @required this.duration,
     @required this.onComplete,
-    @required this.onInterrupt}) : super(key: key);
+    @required this.interruptsMixin}) : super(key: key);
 
   @override
   _SessionTimerState createState() => _SessionTimerState();
@@ -24,7 +24,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   Timer _timer;
   Stopwatch _stopwatch;
   PhoneEventService _phoneEventService;
-  InterruptsManager _lifecycleEventManager;
+  StreamSubscription<PhoneState> _subscription;
 
   @override
   void initState() {
@@ -33,14 +33,9 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
     _stopwatch = Stopwatch();
     _stopwatch.start();
     _phoneEventService = PhoneEventService();
-    _lifecycleEventManager = InterruptsManager();
+    _subscription = _phoneEventService.onPhoneStateChanged.listen(
+        widget.interruptsMixin.addPhoneEventState);
     WidgetsBinding.instance.addObserver(this);
-
-    _phoneEventService.onPhoneStateChanged.listen(
-        _lifecycleEventManager.addPhoneEventState);
-
-    _lifecycleEventManager.onInterruptEvent.listen(
-        widget.onInterrupt);
   }
 
 
@@ -48,8 +43,8 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   void dispose() {
     _timer.cancel();
     _stopwatch.reset();
+    _subscription.cancel();
     _phoneEventService = null;
-    _lifecycleEventManager = null;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -76,6 +71,6 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _lifecycleEventManager.addAppLifecycleState(state);
+    widget.interruptsMixin.addAppLifecycleState(state);
   }
 }

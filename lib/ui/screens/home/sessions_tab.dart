@@ -9,7 +9,7 @@ class SessionsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DBManager dbProvider = Provider.of(context);
+    DBProvider dbProvider = Provider.of(context);
 
     return FutureBuilder<List<Session>>(
       initialData: List<Session>(),

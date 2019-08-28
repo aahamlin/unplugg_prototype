@@ -1,100 +1,79 @@
 
 import 'dart:async';
 import 'dart:ui';
-import 'package:async/async.dart';
-import 'package:flutter/services.dart';
+//import 'package:async/async.dart';
+//import 'package:flutter/services.dart';
+import 'package:mockito/mockito.dart';
 //import 'package:flutter/widgets.dart';
-//import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 import 'package:unplugg_prototype/core/interrupts.dart';
 import 'package:unplugg_prototype/core/services/phone_event/phone_event_service.dart';
 
 void main() {
 
-  InterruptsManager interruptsManager;
+  InterruptsMixin interruptsMixinTester;
 
   setUp(() {
-    interruptsManager = InterruptsManager();
+    interruptsMixinTester = InterruptsMixinTester();
   });
 
-  group('interrupt events', () {
-
-    test('exit emits interrupt immediately', () async {
-      final StreamQueue<InterruptEvent> queue =
-        StreamQueue<InterruptEvent>(interruptsManager.onInterruptEvent);
-
-      interruptsManager.addPhoneEventState(PhoneState.exiting);
-      expect(await queue.next, allOf(
-        isA<InterruptEvent>(),
-        predicate<InterruptEvent>((evt) => evt.failImmediate)
-      ));
-    });
-
-    test('lock then resume emits interrupt immediately', () async {
-      final StreamQueue<InterruptEvent> queue =
-      StreamQueue<InterruptEvent>(interruptsManager.onInterruptEvent);
-
-      interruptsManager.addPhoneEventState(PhoneState.locking);
-      expect(queue.eventsDispatched, 0);
-
-      interruptsManager.addAppLifecycleState(AppLifecycleState.resumed);
-      expect(await queue.next, allOf(
-          isA<InterruptEvent>(),
-          predicate<InterruptEvent>((evt) => evt.failImmediate)
-      ));
-    });
-
-    test('unlock then pause emits interrupt immediately', () async {
-      final StreamQueue<InterruptEvent> queue =
-      StreamQueue<InterruptEvent>(interruptsManager.onInterruptEvent);
-
-      interruptsManager.addPhoneEventState(PhoneState.unlocked);
-      expect(queue.eventsDispatched, 0);
-
-      interruptsManager.addAppLifecycleState(AppLifecycleState.paused);
-      expect(await queue.next, allOf(
-          isA<InterruptEvent>(),
-          predicate<InterruptEvent>((evt) => evt.failImmediate)
-      ));
-    });
-
-    test('resume does not emit interrupt', () async {
-      final StreamQueue<InterruptEvent> queue =
-        StreamQueue<InterruptEvent>(interruptsManager.onInterruptEvent);
-
-      interruptsManager.addAppLifecycleState(AppLifecycleState.resumed);
-      expect(queue.eventsDispatched, 0);
-    });
-
-    test('pause then lock does not emit interrupt', () async {
-      final StreamQueue<InterruptEvent> queue =
-      StreamQueue<InterruptEvent>(interruptsManager.onInterruptEvent);
-
-      interruptsManager.addAppLifecycleState(AppLifecycleState.paused);
-      expect(queue.eventsDispatched, 0);
-      expect(interruptsManager.interruptsTimer.isActive, isTrue);
-
-      interruptsManager.addPhoneEventState(PhoneState.locking);
-      expect(queue.eventsDispatched, 0);
-
-      interruptsManager.interruptsTimer.cancel();
-    });
-
-    test('pause checks events after delay', () async {
-      final StreamQueue<InterruptEvent> queue =
-      StreamQueue<InterruptEvent>(interruptsManager.onInterruptEvent);
-
-      interruptsManager.addAppLifecycleState(AppLifecycleState.paused);
-      expect(queue.eventsDispatched, 0);
-      expect(interruptsManager.interruptsTimer.isActive, isTrue);
-
-      expect(await queue.next, allOf(
-          isA<InterruptEvent>(),
-          predicate<InterruptEvent>((evt) => !evt.failImmediate)
-      ));
-
-      expect(interruptsManager.interruptsTimer.isActive, isFalse);
-    });
-
+  test('exit emits interrupt to fail immediately', () {
+    interruptsMixinTester.addPhoneEventState(PhoneState.exiting);
+    expect(
+      verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
+      predicate<InterruptEvent>((e) => e.failImmediate)
+    );
   });
+
+  test('lock then resume emits interrupt to fail immediately', () {
+    interruptsMixinTester.addPhoneEventState(PhoneState.locking);
+    verifyNever(interruptsMixinTester.onInterrupt((any)));
+
+    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.resumed);
+    expect(
+        verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
+        predicate<InterruptEvent>((e) => e.failImmediate)
+    );
+  });
+
+  test('unlock then pause emits interrupt to fail immediately', () {
+    interruptsMixinTester.addPhoneEventState(PhoneState.unlocked);
+    verifyNever(interruptsMixinTester.onInterrupt((any)));
+
+    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.paused);
+    expect(
+        verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
+        predicate<InterruptEvent>((e) => e.failImmediate)
+    );
+  });
+
+  test('resume does not emit interrupt', () {
+    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.resumed);
+    verifyNever(interruptsMixinTester.onInterrupt((any)));
+  });
+
+  test('pause then lock does not emit interrupt', () {
+    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.paused);
+    verifyNever(interruptsMixinTester.onInterrupt((any)));
+    expect(interruptsMixinTester.interruptsTimer.isActive, isTrue);
+
+    interruptsMixinTester.addPhoneEventState(PhoneState.locking);
+    verifyNever(interruptsMixinTester.onInterrupt((any)));
+    interruptsMixinTester.interruptsTimer.cancel();
+  });
+
+  test('pause emit interrupt after delay', () async {
+    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.paused);
+    verifyNever(interruptsMixinTester.onInterrupt((any)));
+    expect(interruptsMixinTester.interruptsTimer.isActive, isTrue);
+    await Future.delayed(Duration(seconds:1));
+    expect(
+        verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
+        predicate<InterruptEvent>((e) => !e.failImmediate)
+    );
+    expect(interruptsMixinTester.interruptsTimer.isActive, isFalse);
+  });
+
 }
+
+class InterruptsMixinTester extends Mock with InterruptsMixin {}

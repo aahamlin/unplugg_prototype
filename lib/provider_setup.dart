@@ -10,14 +10,14 @@ List<SingleChildCloneableWidget> providers = [
 
 
 List<SingleChildCloneableWidget> _independentServices = [
-  Provider<DBManager>(
-    builder: (context) => DBManager(),
+  Provider<DBProvider>(
+    builder: (context) => DBProvider(),
     dispose: (context, db) => db.close(),
   ),
 ];
 
 List<SingleChildCloneableWidget> _dependentServices = [
-  ProxyProvider<DBManager, SessionStateBloc>(
+  ProxyProvider<DBProvider, SessionStateBloc>(
     builder: (context, dbProvider, bloc) => SessionStateBloc(dbProvider: dbProvider),
   )
 ];

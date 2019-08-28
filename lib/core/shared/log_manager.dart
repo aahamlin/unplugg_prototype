@@ -37,7 +37,7 @@ final _logLevelStr = {
 
 class NamedPrinter extends LogPrinter {
   final String name;
-  final _dbMgr = DBManager();
+//  final _dbMgr = DBProvider();
 
   NamedPrinter(this.name);
 
@@ -46,12 +46,12 @@ class NamedPrinter extends LogPrinter {
     var timeStamp = DateTime.now();
     var msg = '$name ${event.message}';
     println('${timeStamp.toLocal().toIso8601String()} [${_logLevelStr[event.level]}] $msg');
-    _dbMgr.addLogEntry(LogEntry(
+    /*_dbMgr.addLogEntry(LogEntry(
       level: event.level,
       message: msg,
       timeStamp: timeStamp,
       error: event.error
-    ));
+    ));*/
   }
 
 }

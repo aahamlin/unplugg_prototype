@@ -9,7 +9,7 @@ import 'package:unplugg_prototype/core/services/notifications.dart';
 
 void main() async {
 
-  var databaseProvider = DBManager();
+  var databaseProvider = DBProvider();
   var logger = LogManager.getLogger('main');
 
   var notificationManager = NotificationManager();

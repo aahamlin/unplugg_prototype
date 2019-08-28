@@ -21,7 +21,7 @@ class Session {
    */
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
-      columnDuration: duration.inMilliseconds,
+      columnDuration: duration?.inMilliseconds,
       columnStart: startTime?.millisecondsSinceEpoch,
       columnResult: result != null ? describeEnum(result) : null,
       columnReason: reason,

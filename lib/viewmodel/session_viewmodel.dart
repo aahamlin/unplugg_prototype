@@ -28,7 +28,7 @@ class SessionViewModel {
   Map<String, dynamic> _toMap() {
     var map = <String, dynamic>{
       'startTime': startTime?.millisecondsSinceEpoch,
-      'duration': duration.inMinutes,
+      'duration': duration?.inMinutes,
       'state': state,
     };
     if (id != null) {
