@@ -4,6 +4,7 @@ const String columnId = "id";
 const String tableSession = "session";
 const String columnDuration = "duration";
 const String columnStart = "start";
+const String columnInterruptCount = "interrupts";
 const String columnResult = "result";
 const String columnReason = "reason";
 
@@ -12,6 +13,7 @@ CREATE TABLE $tableSession (
     $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
     $columnDuration INTEGER NOT NULL,
     $columnStart INTEGER,
+    $columnInterruptCount INTEGER DEFAULT(0),
     $columnResult TEXT,
     $columnReason TEXT
 );
@@ -20,14 +22,12 @@ CREATE TABLE $tableSession (
 const String tableInterrupts = "interrupts";
 const String columnSessionFK = "session_fk";
 const String columnTimeout = "timeout";
-const String columnName = "name";
 const String columnCancelled = "cancelled";
 
 const String createInterruptsTableSQL = '''
 CREATE TABLE $tableInterrupts (
     $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
     $columnSessionFK INTEGER NOT NULL,
-    $columnName TEXT,
     $columnTimeout INTEGER,
     $columnCancelled INTEGER NOT NULL DEFAULT(0),
     FOREIGN KEY($columnSessionFK)

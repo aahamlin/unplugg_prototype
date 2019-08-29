@@ -27,6 +27,7 @@ class SessionScreen extends StatelessWidget {
     return BlocListener(
       bloc: sessionStateBloc,
       listener: (context, vm) {
+        debugPrint('Session screen listener: ${vm}');
         switch(vm.state) {
           case SessionViewState.succeeded:
 //            _cancelExpiryNotification(sessionStateBloc, vm);
@@ -68,7 +69,12 @@ class SessionScreen extends StatelessWidget {
                         duration: calculateDurationSinceStartTime(
                             vm.startTime,
                             vm.duration),
-                        interruptsMixin: bloc,
+                        onInterrupt: (event) {
+                          bloc.interrupt(vm, event);
+                        },
+                        onResume: () {
+                          bloc.resume(vm);
+                        },
                         onComplete: () => bloc.complete(vm),
                       ),
                     ),
@@ -114,41 +120,6 @@ class SessionScreen extends StatelessWidget {
       },
     );
   }
-
-//  _setExpiryNotification(SessionStateBloc bloc, SessionViewModel vm) async {
-//    var expiry = Duration(seconds: 15);
-//    var notify = Duration(seconds: 3);
-//
-//    var endTime = vm.startTime.add(vm.duration);
-//    var durationToEnd = endTime.difference(DateTime.now());
-//    if (durationToEnd < expiry) {
-//      expiry = durationToEnd;
-//    }
-//    if (durationToEnd > notify) {
-//      notificationManager.showMomentsExpiringNotification(expiry, notify);
-//    } else {
-//      _logger.d('Less than ${notify.inSeconds} remaining, skip notification');
-//    }
-//
-//    int count = await bloc.setInterruptOnSession(vm, expiry);
-//    _logger.d('Session interrupted $count times');
-//    if (count > 2) {
-//      notificationManager.cancelSessionInterruptedNotification();
-//      notificationManager.showSessionFailedNotification();
-//      bloc.fail(vm);
-//    }
-//    else if (count > 1) {
-//      notificationManager.cancelMomentsExpiringNotification();
-//      notificationManager.showSessionInterruptNotification();
-//    }
-//  }
-//
-//  _cancelExpiryNotification(SessionStateBloc bloc, SessionViewModel vm) async {
-//    _logger.d('Interrupt cancelled');
-//    notificationManager.cancelMomentsExpiringNotification();
-//    notificationManager.cancelSessionInterruptedNotification();
-//    bloc.cancelInterruptOnSession(vm);
-//  }
 
 }
 

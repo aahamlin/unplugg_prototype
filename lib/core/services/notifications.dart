@@ -23,18 +23,25 @@ import 'package:unplugg_prototype/core/shared/log_manager.dart';
 
 class NotificationManager {
 
-  factory NotificationManager() => _instance;
+  factory NotificationManager() {
+    if(instance == null) {
+      instance = NotificationManager._();
+    }
+    return instance;
+  }
 
   static const MOMENTS_EXPIRING_ID = 0;
   static const MOMENTS_EXPIRING_INTERRUPT_ID = 1;
   static const MOMENTS_EXPIRING_FAILED_ID = 2;
   static const MOMENTS_EARNED_ID = 3;
 
-  static final NotificationManager _instance = NotificationManager.private();
+  static NotificationManager instance;
 
-  NotificationManager.private();
+  NotificationManager._() {
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  }
 
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
   final _logger = LogManager.getLogger('NotificationManager');
 
@@ -86,7 +93,7 @@ class NotificationManager {
   Future<void> showSessionInterruptNotification() async {
     _logger.d('Schedule session interrupted notification');
 
-    var scheduledTime = DateTime.now().add(Duration(seconds: 1));
+    var scheduledTime = DateTime.now().add(Duration(seconds: 2));
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
         'Unplugg Prototype Notifications',
@@ -97,7 +104,7 @@ class NotificationManager {
     await flutterLocalNotificationsPlugin.schedule(
       MOMENTS_EXPIRING_INTERRUPT_ID,
       'Unplugg Session Warning',
-      'Did you get distracted? Interrupting your session once more will terminate it.',
+      'Did you get distracted? Return to Unplugg to continue maximizing your moments.',
       scheduledTime,
       platformChannelSpecifics,
       //payload: jsonEncode(sessionNotificationDetails.toJson()),
@@ -112,7 +119,7 @@ class NotificationManager {
   Future<void> showSessionFailedNotification() async {
     _logger.d('Schedule session failed notification');
 
-    var scheduledTime = DateTime.now().add(Duration(seconds: 1));
+    var scheduledTime = DateTime.now().add(Duration(seconds: 2));
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
         'Unplugg Prototype Notifications',
@@ -123,7 +130,7 @@ class NotificationManager {
     await flutterLocalNotificationsPlugin.schedule(
       MOMENTS_EXPIRING_FAILED_ID,
       'Unplugg Session Failed',
-      'You interrupted your session.',
+      'Sorry, you have left Unplugg too many times and have not met your goal.',
       scheduledTime,
       platformChannelSpecifics,
       //payload: jsonEncode(sessionNotificationDetails.toJson()),

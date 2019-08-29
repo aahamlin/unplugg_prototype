@@ -25,14 +25,16 @@ class InterruptEvent {
 }
 
 
-mixin InterruptsMixin {
+class Interrupts {
 
   Event previous;
   Event current;
   Timer _stateTimer;
 
-  void onInterrupt(InterruptEvent event);
-  void onResume();
+  final Function(InterruptEvent) onInterrupt;
+  final Function onResume;
+
+  Interrupts({this.onInterrupt, this.onResume});
 
   void _recordEvent(Event e) {
     previous = current;

@@ -7,12 +7,15 @@ import 'timer_text.dart';
 
 class SessionTimer extends StatefulWidget {
   final Duration duration;
+  final Function(InterruptEvent) onInterrupt;
+  final Function onResume;
   final Function onComplete;
-  final InterruptsMixin interruptsMixin;
+
   SessionTimer({Key key,
     @required this.duration,
-    @required this.onComplete,
-    @required this.interruptsMixin}) : super(key: key);
+    @required this.onInterrupt,
+    @required this.onResume,
+    @required this.onComplete}) : super(key: key);
 
   @override
   _SessionTimerState createState() => _SessionTimerState();
@@ -25,6 +28,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   Stopwatch _stopwatch;
   PhoneEventService _phoneEventService;
   StreamSubscription<PhoneState> _subscription;
+  Interrupts _interrupts;
 
   @override
   void initState() {
@@ -32,9 +36,13 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
     _timer = Timer.periodic(new Duration(seconds: 1), callback);
     _stopwatch = Stopwatch();
     _stopwatch.start();
+    _interrupts = Interrupts(
+      onInterrupt: widget.onInterrupt,
+      onResume: widget.onResume
+    );
     _phoneEventService = PhoneEventService();
     _subscription = _phoneEventService.onPhoneStateChanged.listen(
-        widget.interruptsMixin.addPhoneEventState);
+        _interrupts.addPhoneEventState);
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -71,6 +79,6 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    widget.interruptsMixin.addAppLifecycleState(state);
+    _interrupts.addAppLifecycleState(state);
   }
 }

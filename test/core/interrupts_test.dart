@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 //import 'package:async/async.dart';
 //import 'package:flutter/services.dart';
-import 'package:mockito/mockito.dart';
+//import 'package:mockito/mockito.dart';
 //import 'package:flutter/widgets.dart';
 import 'package:test/test.dart';
 import 'package:unplugg_prototype/core/interrupts.dart';
@@ -11,69 +11,63 @@ import 'package:unplugg_prototype/core/services/phone_event/phone_event_service.
 
 void main() {
 
-  InterruptsMixin interruptsMixinTester;
+  Interrupts interrupts;
+  InterruptEvent capturedEvent;
+  bool resumed;
 
   setUp(() {
-    interruptsMixinTester = InterruptsMixinTester();
+    capturedEvent = null;
+    resumed = false;
+    interrupts = Interrupts(
+      onInterrupt: (e) => capturedEvent = e,
+      onResume: () => resumed = true,
+    );
   });
 
   test('exit emits interrupt to fail immediately', () {
-    interruptsMixinTester.addPhoneEventState(PhoneState.exiting);
-    expect(
-      verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
-      predicate<InterruptEvent>((e) => e.failImmediate)
-    );
+    interrupts.addPhoneEventState(PhoneState.exiting);
+    expect(capturedEvent.failImmediate, isTrue);
   });
 
   test('lock then resume emits interrupt to fail immediately', () {
-    interruptsMixinTester.addPhoneEventState(PhoneState.locking);
-    verifyNever(interruptsMixinTester.onInterrupt((any)));
+    interrupts.addPhoneEventState(PhoneState.locking);
+    expect(capturedEvent, isNull);
 
-    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.resumed);
-    expect(
-        verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
-        predicate<InterruptEvent>((e) => e.failImmediate)
-    );
+    interrupts.addAppLifecycleState(AppLifecycleState.resumed);
+    expect(capturedEvent.failImmediate, isTrue);
   });
 
   test('unlock then pause emits interrupt to fail immediately', () {
-    interruptsMixinTester.addPhoneEventState(PhoneState.unlocked);
-    verifyNever(interruptsMixinTester.onInterrupt((any)));
+    interrupts.addPhoneEventState(PhoneState.unlocked);
+    expect(capturedEvent, isNull);
 
-    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.paused);
-    expect(
-        verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
-        predicate<InterruptEvent>((e) => e.failImmediate)
-    );
+    interrupts.addAppLifecycleState(AppLifecycleState.paused);
+    expect(capturedEvent.failImmediate, isTrue);
   });
 
   test('resume does not emit interrupt', () {
-    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.resumed);
-    verifyNever(interruptsMixinTester.onInterrupt((any)));
+    interrupts.addAppLifecycleState(AppLifecycleState.resumed);
+    expect(capturedEvent, isNull);
   });
 
   test('pause then lock does not emit interrupt', () {
-    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.paused);
-    verifyNever(interruptsMixinTester.onInterrupt((any)));
-    expect(interruptsMixinTester.interruptsTimer.isActive, isTrue);
+    interrupts.addAppLifecycleState(AppLifecycleState.paused);
+    expect(capturedEvent, isNull);
+    expect(interrupts.interruptsTimer.isActive, isTrue);
 
-    interruptsMixinTester.addPhoneEventState(PhoneState.locking);
-    verifyNever(interruptsMixinTester.onInterrupt((any)));
-    interruptsMixinTester.interruptsTimer.cancel();
+    interrupts.addPhoneEventState(PhoneState.locking);
+    expect(capturedEvent, isNull);
+    interrupts.interruptsTimer.cancel();
   });
 
   test('pause emit interrupt after delay', () async {
-    interruptsMixinTester.addAppLifecycleState(AppLifecycleState.paused);
-    verifyNever(interruptsMixinTester.onInterrupt((any)));
-    expect(interruptsMixinTester.interruptsTimer.isActive, isTrue);
+    interrupts.addAppLifecycleState(AppLifecycleState.paused);
+    expect(capturedEvent, isNull);
+    expect(interrupts.interruptsTimer.isActive, isTrue);
     await Future.delayed(Duration(seconds:1));
-    expect(
-        verify(interruptsMixinTester.onInterrupt(captureThat(isA<InterruptEvent>()))).captured.single,
-        predicate<InterruptEvent>((e) => !e.failImmediate)
-    );
-    expect(interruptsMixinTester.interruptsTimer.isActive, isFalse);
+    expect(capturedEvent.failImmediate, isFalse);
+    expect(interrupts.interruptsTimer.isActive, isFalse);
   });
 
 }
 
-class InterruptsMixinTester extends Mock with InterruptsMixin {}

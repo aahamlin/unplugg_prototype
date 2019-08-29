@@ -9,33 +9,37 @@ import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
 import 'package:unplugg_prototype/core/data/models/session.dart';
-import 'package:unplugg_prototype/core/factories.dart';
+import 'package:unplugg_prototype/core/services/notifications.dart';
+
 
 void main() {
 
-  MockDBProvider dbProvider;
   SessionStateBloc sessionStateBloc;
+  DBProvider dbProvider;
+
+  setUp(() {
+    DBProvider.instance = MockDBProvider();
+    dbProvider = DBProvider();
+    sessionStateBloc = SessionStateBloc(dbProvider: dbProvider);
+  });
 
   group('fresh sessions', () {
 
     setUp(() {
-      dbProvider = MockDBProvider();
       when(dbProvider.getCurrentSession())
         .thenAnswer((_) => Future.value(null));
-
-      sessionStateBloc = SessionStateBloc(dbProvider: dbProvider);
     });
 
     test('start session', () async {
       final StreamQueue<SessionViewModel> queue =
         StreamQueue<SessionViewModel>(sessionStateBloc.stream);
 
-      when(dbProvider.insertSession(any))
+      when(dbProvider.beginSession(any))
       .thenAnswer((_) => Future.value(Session(duration: Duration(seconds:15), startTime: DateTime.now())));
       sessionStateBloc.start(duration: Duration(seconds: 15));
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.running));
-      verify(dbProvider.insertSession(any)).called(1);
+      verify(dbProvider.beginSession(any)).called(1);
 
     });
 
@@ -52,7 +56,7 @@ void main() {
 
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.cancelled));
-      verify(dbProvider.updateSessionAndDeleteExpiry(any)).called(1);
+      verify(dbProvider.endSession(any)).called(1);
     });
 
     test('complete session, successfull', () async {
@@ -70,7 +74,7 @@ void main() {
 
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.succeeded));
-      verify(dbProvider.updateSessionAndDeleteExpiry(any)).called(1);
+      verify(dbProvider.endSession(any)).called(1);
     });
 
     test('complete session, interrupted', () async {
@@ -88,7 +92,7 @@ void main() {
 
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.failed));
-      verify(dbProvider.updateSessionAndDeleteExpiry(any)).called(1);
+      verify(dbProvider.endSession(any)).called(1);
     });
 
     test('fail session', () async {
@@ -103,31 +107,44 @@ void main() {
 
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.failed));
-      verify(dbProvider.updateSessionAndDeleteExpiry(any)).called(1);
+      verify(dbProvider.endSession(any)).called(1);
     });
   });
 
-  group('continued sessions', ()
+  group('interrupted sessions', ()
   {
     setUp(() {
-      dbProvider = MockDBProvider();
+      NotificationManager.instance = MockNotificationManager();
+    });
 
+    test('interrupt displays 1st warning', () async {
+      throw 'Not implemented';
+    });
+
+
+    test('interrupt fails on 2nd warning', () async {
+      throw 'Not implemented';
     });
 
     test('resume session before end', () async {
+      final StreamQueue<SessionViewModel> queue =
+        StreamQueue<SessionViewModel>(sessionStateBloc.stream);
+
       when(dbProvider.getCurrentSession())
           .thenAnswer((_) => Future.value(Session(
           id: 1, duration: Duration(seconds:15), startTime: DateTime.now())));
 
-      sessionStateBloc = SessionStateBloc(dbProvider: dbProvider);
-      final StreamQueue<SessionViewModel> queue =
-        StreamQueue<SessionViewModel>(sessionStateBloc.stream);
+      sessionStateBloc.resume(SessionViewModel(id: 1, startTime: null, duration: null, state: SessionViewState.running));
 
+      verify(dbProvider.cancelInterrupt(argThat(predicate((e)=>e.id==1)))).called(1);
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.running));
     });
 
     test('resume session after end', () async {
+      final StreamQueue<SessionViewModel> queue =
+        StreamQueue<SessionViewModel>(sessionStateBloc.stream);
+
       when(dbProvider.getCurrentSession())
           .thenAnswer((_) => Future.value(Session(
           id: 1, duration: Duration(seconds:15), startTime: DateTime.now().subtract(Duration(seconds: 20)))));
@@ -135,17 +152,15 @@ void main() {
       when(dbProvider.isSessionInterrupted(any))
           .thenAnswer((_) => Future.value(false));
 
-      sessionStateBloc = SessionStateBloc(dbProvider: dbProvider);
-
-      final StreamQueue<SessionViewModel> queue =
-        StreamQueue<SessionViewModel>(sessionStateBloc.stream);
-
-
+      sessionStateBloc.resume(SessionViewModel(id: 1, startTime: null, duration: null, state: SessionViewState.running));
+      verify(dbProvider.cancelInterrupt(argThat(predicate((e)=>e.id==1)))).called(1);
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.succeeded));
     });
 
     test('resume session interrupted', () async {
+      final StreamQueue<SessionViewModel> queue =
+        StreamQueue<SessionViewModel>(sessionStateBloc.stream);
 
       when(dbProvider.getCurrentSession())
           .thenAnswer((_) => Future.value(Session(
@@ -154,11 +169,9 @@ void main() {
       when(dbProvider.isSessionInterrupted(any))
           .thenAnswer((_) => Future.value(true));
 
-      sessionStateBloc = SessionStateBloc(dbProvider: dbProvider);
 
-      final StreamQueue<SessionViewModel> queue =
-        StreamQueue<SessionViewModel>(sessionStateBloc.stream);
-
+      sessionStateBloc.resume(SessionViewModel(id: 1, startTime: null, duration: null, state: SessionViewState.running));
+      verify(dbProvider.cancelInterrupt(argThat(predicate((e)=>e.id==1)))).called(1);
       expect(await queue.next,
           predicate((SessionViewModel vm) => vm.state == SessionViewState.failed));
     });
@@ -166,3 +179,4 @@ void main() {
 }
 
 class MockDBProvider extends Mock implements DBProvider {}
+class MockNotificationManager extends Mock implements NotificationManager {}

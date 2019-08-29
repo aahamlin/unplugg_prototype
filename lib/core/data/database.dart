@@ -15,21 +15,21 @@ import 'models/log_entry.dart';
 class DBProvider {
 
   factory DBProvider() {
-    if (_instance == null) {
-      _instance = DBProvider._();
+    if (instance == null) {
+      instance = DBProvider._();
     }
-    return _instance;
+    return instance;
   }
 
   DBProvider._();
 
-  @visibleForTesting
-  DBProvider.private(String path) {
-    _path = path;
-    _instance = this;
-  }
+//  @visibleForTesting
+//  DBProvider.private(String path) {
+//    _path = path;
+//    _instance = this;
+//  }
 
-  static DBProvider _instance;
+  static DBProvider instance;
 
   static Database _database;
   static String _path;
@@ -96,7 +96,7 @@ class DBProvider {
       Session.fromMap(res.first) : null;
   }
 
-  Future<Session> insertSession(Session s) async {
+  Future<Session> beginSession(Session s) async {
     final db = await database;
 
     s.id = await db.insert(tableSession, s.toMap());
@@ -118,70 +118,64 @@ class DBProvider {
     return null;
   }
 
-  updateSession(Session s) async {
+  Future<void> endSession(Session s) async {
     final db = await database;
-    // session rows only update when finished
     int count = await db.update(
       tableSession, s.toMap(),
       where: '$columnId = ?',
       whereArgs: [s.id]);
     debugPrint('updated $count rows: ${tableSession}(${s})');
-  }
 
-  deleteExpiry(int session_id) async {
-    final db = await database;
     // once updated, delete the run table entries
-    int count = await db.delete(tableInterrupts,
-        where: '$columnSessionFK = ?', whereArgs: [session_id]);
+    count = await db.delete(tableInterrupts,
+        where: '$columnSessionFK = ?', whereArgs: [s.id]);
     debugPrint('deleted $count rows: ${tableInterrupts}');
-
   }
 
-  updateSessionAndDeleteExpiry(Session s) async {
-    await updateSession(s);
-    await deleteExpiry(s.id);
-  }
-
-  Future<List<Interrupt>> insertExpiryWarning(Interrupt runExpiry) async {
+  Future<int> insertInterrupt(Interrupt interrupt) async {
     final db = await database;
 
-    runExpiry.id = await db.insert(tableInterrupts, runExpiry.toMap());
-    debugPrint('inserted ${runExpiry}');
+    interrupt.id = await db.insert(tableInterrupts, interrupt.toMap());
+    debugPrint('inserted ${interrupt}');
 
-    return getExpiryWarning(runExpiry.session_fk);
+    // update current session with count of interrupts
+    int count = await getTotalInterruptCount(interrupt.session_fk);
+//     await db.update(tableSession,
+//        {columnInterruptCount: ++count},
+//        where: '$columnId = ?', whereArgs: [interrupt.session_fk]);
+
+    return count;
   }
 
-  Future<List<Interrupt>> cancelExpiryWarning(Interrupt runExpiry) async {
+  Future<void> cancelInterrupt(Interrupt interrupt) async {
     final db = await database;
 
     int count = await db.update(tableInterrupts,
-      {columnSessionFK: runExpiry.session_fk, columnCancelled: true},
-      where: '$columnSessionFK = ?', whereArgs: [runExpiry.session_fk]);
+      {columnSessionFK: interrupt.session_fk, columnCancelled: true},
+      where: '$columnSessionFK = ?', whereArgs: [interrupt.session_fk]);
     debugPrint('updated ${count} rows: $tableInterrupts');
-
-    return getExpiryWarning(runExpiry.session_fk);
   }
 
-  Future<List<Interrupt>> getExpiryWarning(int session_fk) async {
+  Future<int> getTotalInterruptCount(int session_fk) async {
     final db = await database;
 
-    var res = await db.query(tableInterrupts,
-        where: '$columnSessionFK = ?', whereArgs: [session_fk]);
-
-    // todo: get active expiration notices
-    List<Interrupt> listOfRunExpiry = res.isNotEmpty
-        ? res.map((e) => Interrupt.fromMap(e)).toList()
-        : [];
-
-    return listOfRunExpiry;
-
+    var res = await db.rawQuery(
+        'SELECT COUNT($columnId) as count FROM $tableInterrupts WHERE $columnSessionFK = ?', [session_fk]);
+    debugPrint('$res');
+    return res.isNotEmpty ? res.first['count'] : 0;
   }
 
 
   Future<bool> isSessionInterrupted(Session session) async {
-    var sessionEndTime = session.startTime.add(session.duration);
-    var sessionHasExpired = (await getExpiryWarning(session.id))
-        .any((e) => e.cancelled != true && e.timeout.isBefore(sessionEndTime));
+    final db = await database;
+
+    var now = DateTime.now();
+
+    var res = await db.query(tableInterrupts,
+      where: '$columnSessionFK = ?', whereArgs: [session.id]);
+
+    var sessionHasExpired = res.map((m) => Interrupt.fromMap(m))
+        .any((e) => e.cancelled != true && e.timeout.isBefore(now));
     debugPrint('isSessionInterrupted: ${session} $sessionHasExpired');
     return sessionHasExpired;
   }

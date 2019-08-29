@@ -6,7 +6,6 @@ class Interrupt {
   int id;
   int session_fk;
   DateTime timeout;
-  String name;
   bool cancelled;
 
   /**
@@ -17,7 +16,6 @@ class Interrupt {
     var map = <String, dynamic>{
       columnSessionFK: session_fk,
       columnTimeout: timeout.millisecondsSinceEpoch,
-      columnName: name,
       columnCancelled: cancelled? 1: 0,
     };
     if (id != null) {
@@ -30,7 +28,6 @@ class Interrupt {
     this.id,
     @required this.session_fk,
     this.timeout,
-    this.name,
     this.cancelled = false,
   });
 
@@ -40,7 +37,6 @@ class Interrupt {
   Interrupt.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
     session_fk = map[columnSessionFK];
-    name = map[columnName];
     timeout = DateTime.fromMillisecondsSinceEpoch(map[columnTimeout]);
     cancelled = (map[columnCancelled] == 1 ? true : false);
   }
