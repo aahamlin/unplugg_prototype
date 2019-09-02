@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:unplugg_prototype/core/shared/log_manager.dart';
 import 'services/phone_event/phone_event_service.dart';
 
 //Events
@@ -25,16 +26,21 @@ class InterruptEvent {
 }
 
 
-class Interrupts {
+mixin Interrupts {
 
   Event previous;
   Event current;
   Timer _stateTimer;
 
-  final Function(InterruptEvent) onInterrupt;
-  final Function onResume;
+  Logger _logger = LogManager.getLogger('Interrupt');
 
-  Interrupts({this.onInterrupt, this.onResume});
+//  final Function(InterruptEvent) onInterrupt;
+//  final Function onResume;
+
+//  Interrupts({this.onInterrupt, this.onResume});
+
+  void onInterrupt(InterruptEvent event);
+  void onResume();
 
   void _recordEvent(Event e) {
     previous = current;
@@ -51,7 +57,7 @@ class Interrupts {
   //E = fail (immediate)
   List<Event> pauseInterrupts = [Event.P, Event.U, Event.E];
   void _calculate() {
-    debugPrint('$previous $current');
+    _logger.i('$previous $current');
     if (current == Event.E) {
       onInterrupt(InterruptEvent(name: 'E', failImmediate: true));
     }
@@ -66,9 +72,9 @@ class Interrupts {
       onResume();
     }
     else if (current == Event.P) {
-      debugPrint('timer scheduling due to pause');
+      _logger.d('timer scheduling due to pause');
       _stateTimer = Timer(Duration(seconds: 1), () {
-        debugPrint('timer fired: $previous$current');
+        _logger.i('timer fired: $previous$current');
         if (current == Event.P) {
           var name = previous != null ? (describeEnum(previous) + 'P') : 'P';
           onInterrupt(InterruptEvent(name: name));

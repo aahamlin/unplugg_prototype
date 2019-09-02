@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 
+import '../../../router.dart';
+
 class ActionTab extends StatefulWidget {
   ActionTab({Key key}) : super(key: key);
 
@@ -26,11 +28,12 @@ class _ActionState extends State<ActionTab> {
       builder: (context, bloc, child) {
         return Container(
           child: IconButton(
-            iconSize: 250.0,
+            //iconSize: 250.0,
             icon: ImageIcon(AssetImage('assets/logo.png')),
             color: Colors.green,
             onPressed: () async {
               bloc.start(duration: Duration(minutes: _selectedDuration));
+              Navigator.pushNamed(context, RouteNames.SESSION);
             },
           ),
         );

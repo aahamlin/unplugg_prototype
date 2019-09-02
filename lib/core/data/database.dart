@@ -23,16 +23,9 @@ class DBProvider {
 
   DBProvider._();
 
-//  @visibleForTesting
-//  DBProvider.private(String path) {
-//    _path = path;
-//    _instance = this;
-//  }
-
   static DBProvider instance;
 
   static Database _database;
-  static String _path;
 
   final _setupDatabaseMemoizer = AsyncMemoizer<Database>();
 
@@ -51,7 +44,7 @@ class DBProvider {
     return path;
   }
   _setupDatabase() async {
-    String path = _path ?? await _dbMobilePath();
+    String path = await _dbMobilePath();
     return await openDatabase(path, version: 1,
         onOpen: openDB,
         onUpgrade: upgradeDB,
@@ -96,64 +89,51 @@ class DBProvider {
       Session.fromMap(res.first) : null;
   }
 
-  Future<Session> beginSession(Session s) async {
+  Future<Session> beginSession(Session session) async {
     final db = await database;
 
-    s.id = await db.insert(tableSession, s.toMap());
-    debugPrint('inserted ${tableSession}(${s})');
-    return s;
+    session.id = await db.insert(tableSession, session.toMap());
+    debugPrint('beginSession: ${tableSession}(${session})');
+    return session;
   }
 
-  Future<Session> getCurrentSession() async {
+  // todo: this could be simply directly failing unended sessions on app startup
+  Future<List<Session>> getOrphanedSessions() async {
     final db = await database;
 
     var res = await db.query(tableSession,
       where: '$columnResult IS NULL');
 
-    if(res.isNotEmpty) {
-      // todo: some error situations have caused this assert, investigate
-      assert(res.length == 1);// if ever more than one, there is a programming error
-      return Session.fromMap(res.first);
-    }
-    return null;
+    return res.isNotEmpty ? res.map((m) => Session.fromMap(m)).toList() : [];
   }
 
-  Future<void> endSession(Session s) async {
+  Future<void> endSession(Session session) async {
     final db = await database;
     int count = await db.update(
-      tableSession, s.toMap(),
+      tableSession, session.toMap(),
       where: '$columnId = ?',
-      whereArgs: [s.id]);
-    debugPrint('updated $count rows: ${tableSession}(${s})');
+      whereArgs: [session.id]);
+    debugPrint('endSession: ${tableSession}(${session})');
 
-    // once updated, delete the run table entries
-    count = await db.delete(tableInterrupts,
-        where: '$columnSessionFK = ?', whereArgs: [s.id]);
-    debugPrint('deleted $count rows: ${tableInterrupts}');
+    // cancel any outstanding interrupts
+    await cancelAllInterrupts(session.id);
   }
 
-  Future<int> insertInterrupt(Interrupt interrupt) async {
+  Future<void> insertInterrupt(Interrupt interrupt) async {
     final db = await database;
 
     interrupt.id = await db.insert(tableInterrupts, interrupt.toMap());
-    debugPrint('inserted ${interrupt}');
-
-    // update current session with count of interrupts
-    int count = await getTotalInterruptCount(interrupt.session_fk);
-//     await db.update(tableSession,
-//        {columnInterruptCount: ++count},
-//        where: '$columnId = ?', whereArgs: [interrupt.session_fk]);
-
-    return count;
+    debugPrint('insertInterrupt: $tableInterrupts(${interrupt})');
   }
 
-  Future<void> cancelInterrupt(Interrupt interrupt) async {
+  Future<int> cancelAllInterrupts(int session_id) async {
     final db = await database;
 
     int count = await db.update(tableInterrupts,
-      {columnSessionFK: interrupt.session_fk, columnCancelled: true},
-      where: '$columnSessionFK = ?', whereArgs: [interrupt.session_fk]);
-    debugPrint('updated ${count} rows: $tableInterrupts');
+      {columnSessionFK: session_id, columnCancelled: true},
+      where: '$columnSessionFK = ?', whereArgs: [session_id]);
+    debugPrint('cancelAllInterrupts: ${count} $tableInterrupts');
+    return count;
   }
 
   Future<int> getTotalInterruptCount(int session_fk) async {
@@ -165,18 +145,31 @@ class DBProvider {
     return res.isNotEmpty ? res.first['count'] : 0;
   }
 
+  Future<List<Interrupt>> getSessionInterrupts(int session_fk) async {
+    final db = await database;
+
+    var res = await db.query(tableInterrupts,
+        where: '$columnSessionFK = ?',
+        whereArgs: [session_fk]);
+    debugPrint('getSessionInterrupts: session($session_fk) interrupt count(${res.length})');
+    return res.isNotEmpty ? res.map((m) => Interrupt.fromMap(m)).toList() : [];
+  }
 
   Future<bool> isSessionInterrupted(Session session) async {
     final db = await database;
 
     var now = DateTime.now();
+    var endTime = session.startTime.add(session.duration);
 
     var res = await db.query(tableInterrupts,
       where: '$columnSessionFK = ?', whereArgs: [session.id]);
 
+    // expiration, if active and expiration is before now and expiration before end
     var sessionHasExpired = res.map((m) => Interrupt.fromMap(m))
-        .any((e) => e.cancelled != true && e.timeout.isBefore(now));
-    debugPrint('isSessionInterrupted: ${session} $sessionHasExpired');
+        .any((e) => e.cancelled != true
+          && e.timeout.isBefore(endTime)
+          && e.timeout.isBefore(now));
+    debugPrint('isSessionInterrupted = $sessionHasExpired');
     return sessionHasExpired;
   }
 
@@ -197,7 +190,7 @@ class DBProvider {
    */
   close() async {
     final db = await database;
-    print("closing database");
+    debugPrint("closing database");
     db.close();
   }
 }

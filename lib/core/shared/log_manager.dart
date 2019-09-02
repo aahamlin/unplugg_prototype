@@ -44,8 +44,8 @@ class NamedPrinter extends LogPrinter {
   @override
   void log(LogEvent event) {
     var timeStamp = DateTime.now();
-    var msg = '$name ${event.message}';
-    println('${timeStamp.toLocal().toIso8601String()} [${_logLevelStr[event.level]}] $msg');
+    var msg = '$name|${event.message}';
+    println('[${_logLevelStr[event.level]}] ${timeStamp.toLocal().toIso8601String()} $msg');
     /*_dbMgr.addLogEntry(LogEntry(
       level: event.level,
       message: msg,

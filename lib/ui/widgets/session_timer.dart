@@ -1,48 +1,53 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
+import 'package:unplugg_prototype/core/data/models/session.dart';
 import 'package:unplugg_prototype/core/interrupts.dart';
 import 'package:unplugg_prototype/core/services/phone_event/phone_event_service.dart';
 import 'timer_text.dart';
 
 class SessionTimer extends StatefulWidget {
-  final Duration duration;
-  final Function(InterruptEvent) onInterrupt;
-  final Function onResume;
-  final Function onComplete;
+
+  SessionStateBloc bloc;
+  Session session;
 
   SessionTimer({Key key,
-    @required this.duration,
-    @required this.onInterrupt,
-    @required this.onResume,
-    @required this.onComplete}) : super(key: key);
+    @required this.session,
+    @required this.bloc,
+  }) : assert(bloc != null),
+        assert(session != null),
+        super(key: key);
 
   @override
   _SessionTimerState createState() => _SessionTimerState();
 
 }
 
-class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver {
+class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver, Interrupts {
 
   Timer _timer;
-  Stopwatch _stopwatch;
+//  Stopwatch _stopwatch;
   PhoneEventService _phoneEventService;
   StreamSubscription<PhoneState> _subscription;
-  Interrupts _interrupts;
+//  Interrupts _interrupts;
+//  SessionStateBloc _bloc;
 
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(new Duration(seconds: 1), callback);
-    _stopwatch = Stopwatch();
-    _stopwatch.start();
-    _interrupts = Interrupts(
-      onInterrupt: widget.onInterrupt,
-      onResume: widget.onResume
-    );
+//    _stopwatch = Stopwatch();
+//    _stopwatch.start();
+//    _bloc = Provider.of<SessionStateBloc>(context);
+//    _interrupts = Interrupts(
+//      onInterrupt: widget.onInterrupt,
+//      onResume: widget.onResume
+//    );
     _phoneEventService = PhoneEventService();
     _subscription = _phoneEventService.onPhoneStateChanged.listen(
-        _interrupts.addPhoneEventState);
+        this.addPhoneEventState);
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -50,7 +55,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   @override
   void dispose() {
     _timer.cancel();
-    _stopwatch.reset();
+//    _stopwatch.reset();
     _subscription.cancel();
     _phoneEventService = null;
     WidgetsBinding.instance.removeObserver(this);
@@ -58,10 +63,11 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   }
 
   void callback(Timer timer) {
-    if (_stopwatch.elapsed >= widget.duration) {
+    if (timeRemaining.isNegative) {
       _timer.cancel();
-      _stopwatch.stop();
-      widget.onComplete();
+//      _stopwatch.stop();
+//      widget.onComplete();
+      widget.bloc.complete(widget.session);
     }
     setState(() {
 
@@ -69,7 +75,7 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
   }
 
   Duration get timeRemaining {
-    return widget.duration - _stopwatch.elapsed;
+    return widget.session.endTime.difference(DateTime.now());
   }
 
   @override
@@ -79,6 +85,27 @@ class _SessionTimerState extends State<SessionTimer> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _interrupts.addAppLifecycleState(state);
+    this.addAppLifecycleState(state);
+  }
+
+  @override
+  void onInterrupt(InterruptEvent event) {
+    if (event.failImmediate) {
+      widget.bloc.fail(widget.session);
+    }
+    else {
+      widget.bloc.interrupt(widget.session);
+    }
+    setState(() {
+
+    });
+  }
+
+  @override
+  void onResume() {
+    setState(() {
+
+    });
+    widget.bloc.resume(widget.session);
   }
 }

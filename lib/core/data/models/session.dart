@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 import '../database_schema.dart';
+import 'interrupt.dart';
 
 enum SessionResult {
+  none,
   success,
   failure,
+  cancelled,
 }
 
 class Session {
@@ -21,8 +24,8 @@ class Session {
    */
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
-      columnDuration: duration?.inMilliseconds,
-      columnStart: startTime?.millisecondsSinceEpoch,
+      columnDuration: duration.inMilliseconds,
+      columnStart: startTime.millisecondsSinceEpoch,
       columnResult: result != null ? describeEnum(result) : null,
       columnReason: reason,
     };
@@ -40,6 +43,8 @@ class Session {
     this.result,
   });
 
+  DateTime get endTime => startTime.add(duration);
+
   /**
    * Transform from Map to Object from Database queries
    */
@@ -47,12 +52,24 @@ class Session {
     id = map[columnId];
     duration = Duration(milliseconds: map[columnDuration]);
     startTime = DateTime.fromMillisecondsSinceEpoch(map[columnStart]);
-    result = (map[columnResult] != null ? SessionResult.values.firstWhere((e) => describeEnum(e) == map[columnResult]) : null);
+    result = (map[columnResult] != null ?
+      SessionResult.values.firstWhere((e) => describeEnum(e) == map[columnResult])
+        : SessionResult.none);
     reason = map[columnReason];
   }
 
   @override
   toString() {
-    return toMap().toString();
+    var map = <String, dynamic>{
+      columnDuration: duration.inMinutes,
+      columnStart: startTime.toLocal(),
+      'endTime': endTime.toLocal(),
+      columnResult: result != null ? describeEnum(result) : null,
+      columnReason: reason,
+    };
+    if (id != null) {
+      map[columnId] = id;
+    }
+    return map.toString();
   }
 }

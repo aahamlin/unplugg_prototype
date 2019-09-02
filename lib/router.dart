@@ -9,8 +9,8 @@ import 'package:unplugg_prototype/ui/screens/not_found.dart';
 class RouteNames {
   static const HOME = '/';
   static const SESSION = '/session';
-  static const COMPLETE = '/complete';
-  static const INCOMPLETE = '/incomplete';
+  static const SUCCESS = '/success';
+  static const FAILURE = '/failure';
 }
 
 class Router {
@@ -30,9 +30,9 @@ class Router {
         return MaterialPageRoute(builder: (context) => HomeScreen());
       case RouteNames.SESSION:
         return MaterialPageRoute(builder: (context) => SessionScreen(vm: vm));
-      case RouteNames.COMPLETE:
+      case RouteNames.SUCCESS:
         return MaterialPageRoute(builder: (context) => CompleteScreen(vm: vm));
-      case RouteNames.INCOMPLETE:
+      case RouteNames.FAILURE:
         return MaterialPageRoute(builder: (context) => IncompleteScreen(vm: vm));
       default:
         String unknownRoute = settings.name;

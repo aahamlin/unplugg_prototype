@@ -87,7 +87,10 @@ class NotificationManager {
 
   Future<void> cancelMomentsExpiringNotification() async {
     _logger.d('Cancel moments expiring notification');
-    await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_ID);
+    var pending = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    if(pending.any((req) => req.id == MOMENTS_EXPIRING_ID)) {
+      await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_ID);
+    }
   }
 
   Future<void> showSessionInterruptNotification() async {
@@ -113,7 +116,11 @@ class NotificationManager {
 
   Future<void> cancelSessionInterruptedNotification() async {
     _logger.d('Cancel session interrupted notification');
-    await flutterLocalNotificationsPlugin.cancel(MOMENTS_EXPIRING_INTERRUPT_ID);
+    var pending = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    if(pending.any((req) => req.id == MOMENTS_EXPIRING_INTERRUPT_ID)) {
+      await flutterLocalNotificationsPlugin.cancel(
+          MOMENTS_EXPIRING_INTERRUPT_ID);
+    }
   }
 
   Future<void> showSessionFailedNotification() async {
@@ -144,7 +151,10 @@ class NotificationManager {
 
   Future<void> _cancelAllNotifications() async {
     _logger.d('Cancel all notifications');
-    await flutterLocalNotificationsPlugin.cancelAll();
+    var pending = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    if(pending.isNotEmpty) {
+      await flutterLocalNotificationsPlugin.cancelAll();
+    }
   }
 
   Future<void> onSelectNotification(String payload) async {

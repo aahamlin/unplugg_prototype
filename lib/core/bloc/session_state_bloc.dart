@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../interrupts.dart';
 import 'bloc_base.dart';
@@ -5,194 +7,171 @@ import 'package:unplugg_prototype/core/shared/log_manager.dart';
 import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/core/data/models/session.dart';
 import 'package:unplugg_prototype/core/data/models/interrupt.dart';
-import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
+import 'package:unplugg_prototype/viewmodel/session_state_viewmodel.dart';
 import 'package:unplugg_prototype/core/services/notifications.dart';
 
 /**
  * Moves session through its states: None, Running, Complete, Incomplete
  */
-class SessionStateBloc extends BlocBase<SessionViewModel> {
+class SessionStateBloc extends BlocBase<SessionStateViewModel> {
 
   final _logger = LogManager.getLogger('SessionStateBloc');
   final DBProvider dbProvider;
+  Timer _expirationTimer;
+  NotificationManager notificationManager = NotificationManager();
+
 
   SessionStateBloc({this.dbProvider}) {
     // exit is currently  failure condition
-    //_scan();
+    _failOrphanedSessions();
   }
 
 
   Future start({Duration duration}) async {
     _logger.i('starting session: ${duration.inMinutes} min');
+
     var session = await dbProvider.beginSession(
         Session(duration: duration, startTime: DateTime.now()));
 
-    final vm = SessionViewModel(
-      id: session.id,
-      startTime: session.startTime,
-      duration: session.duration,
-      state: SessionViewState.running,
-    );
-
-    add(vm);
-    _logger.i('started ${vm}');
+    _emitSessionState(session.id);
   }
 
 
-  Future cancel(final SessionViewModel input) async {
-    _logger.i('cancelling: ${input}');
-    assert(input.state == SessionViewState.running);
-
-    var session = Session(id: input.id,
-        duration: input.duration,
-        startTime: input.startTime,
-        result: SessionResult.failure,
-        reason: 'User cancelled');
+  Future cancel(final Session session) async {
+    _logger.i('cancelling: ${session}');
+    session.result = SessionResult.cancelled;
+    session.reason = 'User cancelled';
 
     await dbProvider.endSession(session);
-
-    final output = SessionViewModel(
-      id: session.id,
-      duration: session.duration,
-      startTime: session.startTime,
-      state: SessionViewState.cancelled,
-    );
-
-    add(output);
-    _logger.i('cancelled: ${output}');
+    _emitSessionState(session.id);
   }
 
-
-  Future complete(final SessionViewModel input) async {
-    _logger.i('completing: ${input}');
-    assert(input.state == SessionViewState.running);
-
-    var session = Session(id: input.id,
-      duration: input.duration,
-      startTime: input.startTime,
-    );
+  Future complete(final Session session) async {
+    _logger.i('completing: $session');
 
     var isSessionInterrupted = await dbProvider.isSessionInterrupted(session);
+    _logger.i('isSessionInterrupted $isSessionInterrupted');
 
     if (isSessionInterrupted) {
-      session.result = SessionResult.failure;
-      session.reason = 'User left session for too long';
-    }
-    else {
-      session.result = SessionResult.success;
-      session.reason = 'Success';
+      return fail(session);
     }
 
+    session.result = SessionResult.success;
+    session.reason = 'Success';
     await dbProvider.endSession(session);
+    _emitSessionState(session.id);
 
-    final output = SessionViewModel(
-      id: session.id,
-      duration: session.duration,
-      startTime: session.startTime,
-      state: session.result == SessionResult.success ? SessionViewState
-          .succeeded : SessionViewState.failed,
-    );
-    add(output);
-    _logger.i('completed: ${output}');
   }
 
-  Future fail(final SessionViewModel input) async {
-    _logger.i('failing: ${input}');
-    var session = Session(id: input.id,
-      duration: input.duration,
-      startTime: input.startTime,
-    );
+  Future fail(final Session session, {bool notify = false}) async {
+    _logger.i('failing: ${session}');
+
     session.result = SessionResult.failure;
     session.reason = 'User interrupted session';
 
+    if (notify) {
+      notificationManager.showSessionFailedNotification();
+    }
     await dbProvider.endSession(session);
-
-    final output = SessionViewModel(
-      id: session.id,
-      duration: session.duration,
-      startTime: session.startTime,
-      state: SessionViewState.failed,
-    );
-
-    add(output);
-    _logger.i('failed: ${output}');
+    _emitSessionState(session.id);
   }
 
-  void interrupt(final SessionViewModel input, InterruptEvent event) async {
-    bool isTooNearEndTime = false;
+  Future interrupt(final Session session) async {
     var expiry = Duration(seconds: 10);
-    var endTime = input.startTime.add(input.duration);
-    var durationToEnd = endTime.difference(DateTime.now());
-    if (durationToEnd < expiry) {
-      isTooNearEndTime = true;
-    }
+    var timeout = DateTime.now().add(expiry);
 
-    if (event.failImmediate || isTooNearEndTime) {
-      fail(input);
+    var interrupt = Interrupt(
+        session_fk: session.id,
+        timeout: timeout);
+
+    await dbProvider.insertInterrupt(interrupt);
+
+    int count = await dbProvider.getTotalInterruptCount(session.id);
+
+    if (count > 1) {
+      session.result = SessionResult.failure;
+      session.reason = 'User interrupted session $count times';
+
+      await dbProvider.endSession(session);
+      notificationManager.showSessionFailedNotification();
     }
     else {
-      var timeout = DateTime.now().add(expiry);
-
-      var interrupt = Interrupt(
-          session_fk: input.id,
-          timeout: timeout);
-
-      int interruptCount = await dbProvider.insertInterrupt(interrupt);
-      _cancelInterruptNotification();
-      // setup notifications
-      var notificationManager = NotificationManager();
-      if (interruptCount > 1) {
-        notificationManager.showSessionFailedNotification();
-        fail(input);
-      }
-      else {
-        notificationManager.showSessionInterruptNotification();
-      }
+      _logger.i('scheduling expiration of session: $session');
+      notificationManager.showSessionInterruptNotification();
+      _expirationTimer = Timer(expiry, () async {
+        // todo if not resumed then fail session
+        _logger.i('session has timed out: $session');
+        fail(session, notify: true);
+      });
     }
+
+    _emitSessionState(session.id);
   }
 
-  void resume(final SessionViewModel input) async {
-    _cancelInterruptNotification();
-    var session = Session(id: input.id,
-      duration: input.duration,
-      startTime: input.startTime,
-    );
+  Future resume(final Session session) async {
+    debugPrint('resume $session');
+    if (_expirationTimer != null) {
+      _expirationTimer.cancel();
+    }
+    _cancelNotifications();
 
     var isSessionInterrupted = await dbProvider.isSessionInterrupted(session);
-
+    _logger.i('isSessionInterrupted $isSessionInterrupted');
     if(isSessionInterrupted) {
-      fail(input);
+      return fail(session);
     }
+    else if (session.endTime.isBefore(DateTime.now())) {
+      return complete(session);
+    }
+
+    await dbProvider.cancelAllInterrupts(session.id);
+    _emitSessionState(session.id);
   }
 
 
-  _cancelInterruptNotification() {
-    _logger.d('Cancelling user notifications');
-    var notificationManager = NotificationManager();
+  _cancelNotifications() {
     notificationManager.cancelMomentsExpiringNotification();
     notificationManager.cancelSessionInterruptedNotification();
   }
 
-  Future _scan() async {
-    _logger.d('Scanning for current session.');
-    var session = await dbProvider.getCurrentSession();
-    // kick off app in running session, allow session page to complete
-    if (session != null) {
-      var sessionEndTime = session.startTime.add(session.duration);
-      final vm = SessionViewModel(
-        id: session.id,
-        startTime: session.startTime,
-        duration: session.duration,
-        state: SessionViewState.running,
-      );
-      if (DateTime.now().isAfter(sessionEndTime)) {
-        return complete(vm);
-      }
-      else {
-        add(vm);
-      }
-    }
+  Future _failOrphanedSessions() async {
+    _logger.d('Scanning for running session.');
+    var sessions = await dbProvider.getOrphanedSessions();
+    debugPrint('getOrphanedSessions returned: $sessions');
+    sessions.forEach((session) async {
+      session.result = SessionResult.failure;
+      session.reason = 'User exited session';
+      await dbProvider.endSession(session);
+    });
   }
 
+
+  Future _emitSessionState(int session_id) async {
+    Session session = await dbProvider.getSession(session_id);
+    debugPrint('$session');
+//    List<Interrupt> interrupts = await dbProvider.getSessionInterrupts(session_id);
+//    debugPrint('$interrupts');
+
+    var sessionState = SessionStateViewModel(
+      session: session,
+//      interrupts: interrupts,
+      state: _mapResultToState(session.result),
+    );
+
+    add(sessionState);
+  }
+
+  SessionState _mapResultToState(SessionResult result) {
+    switch (result) {
+      case SessionResult.failure:
+        return SessionState.failed;
+      case SessionResult.success:
+        return SessionState.succeeded;
+      case SessionResult.cancelled:
+        return SessionState.none;
+      default:
+        return SessionState.running;
+    }
+  }
 }
 

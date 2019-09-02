@@ -4,7 +4,6 @@ const String columnId = "id";
 const String tableSession = "session";
 const String columnDuration = "duration";
 const String columnStart = "start";
-const String columnInterruptCount = "interrupts";
 const String columnResult = "result";
 const String columnReason = "reason";
 
@@ -12,8 +11,7 @@ const String createSessionTableSQL = '''
 CREATE TABLE $tableSession (
     $columnId INTEGER PRIMARY KEY AUTOINCREMENT,
     $columnDuration INTEGER NOT NULL,
-    $columnStart INTEGER,
-    $columnInterruptCount INTEGER DEFAULT(0),
+    $columnStart INTEGER NOT NULL,
     $columnResult TEXT,
     $columnReason TEXT
 );

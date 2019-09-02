@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:unplugg_prototype/core/data/models/session.dart';
 import 'package:unplugg_prototype/router.dart';
 
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
@@ -9,7 +10,7 @@ import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/ui/widgets/session_timer.dart';
 import 'package:unplugg_prototype/core/shared/utilities.dart';
 import 'package:unplugg_prototype/ui/widgets/bloc_listener.dart';
-import 'package:unplugg_prototype/viewmodel/session_viewmodel.dart';
+import 'package:unplugg_prototype/viewmodel/session_state_viewmodel.dart';
 import 'package:unplugg_prototype/core/shared/log_manager.dart';
 //import 'package:unplugg_prototype/core/interrupts.dart';
 
@@ -17,28 +18,20 @@ class SessionScreen extends StatelessWidget {
 
   final _logger = LogManager.getLogger('SessionScreen');
 //  final notificationManager = NotificationManager();
-  final SessionViewModel vm;
+  final SessionStateViewModel vm;
 
-  SessionScreen({Key key, SessionViewModel this.vm}) : super(key: key);
+  SessionScreen({Key key, SessionStateViewModel this.vm}) : super(key: key);
 
   @override Widget build(BuildContext context) {
-    final SessionStateBloc sessionStateBloc = Provider.of<SessionStateBloc>(context);
-
+    final SessionStateBloc bloc = Provider.of<SessionStateBloc>(context);
     return BlocListener(
-      bloc: sessionStateBloc,
-      listener: (context, vm) {
-        debugPrint('Session screen listener: ${vm}');
-        switch(vm.state) {
-          case SessionViewState.succeeded:
-//            _cancelExpiryNotification(sessionStateBloc, vm);
-            Navigator.pushReplacementNamed(context, RouteNames.COMPLETE, arguments: vm);
-            break;
-          case SessionViewState.failed:
-//            _cancelExpiryNotification(sessionStateBloc, vm);
-            Navigator.pushReplacementNamed(context, RouteNames.INCOMPLETE, arguments: vm);
-            break;
-          default:
-            debugPrint('Session screen: ${vm.state}');
+      bloc: bloc,
+      listener: (context, sessionState) {
+        if(sessionState.state == SessionState.failed) {
+          Navigator.pushReplacementNamed(context, RouteNames.FAILURE);
+        }
+        else if(sessionState.state == SessionState.succeeded) {
+          Navigator.pushReplacementNamed(context, RouteNames.SUCCESS);
         }
       },
       child: Scaffold(
@@ -47,50 +40,23 @@ class SessionScreen extends StatelessWidget {
         ),
         body: Consumer<SessionStateBloc>(
           builder: (context, bloc, child) {
-          return StreamBuilder<SessionViewModel>(
+          return StreamBuilder<SessionStateViewModel>(
               stream: bloc.stream,
               initialData: vm,
               builder: (context, snapshot) {
-                if(snapshot.hasData) {
-                  var vm = snapshot.data;
-                  return WillPopScope(
-                    onWillPop: () => _onWillPopScope(context,
-                        vm, (willCancel) {
-                          if (willCancel) {
-                            // terminate the session
-                            _logger.d('User cancelled session');
-                            bloc.cancel(vm);
-                          }
-                          Navigator.of(context).pop(willCancel);
-                      },
-                    ),
-                    child: Center(
-                      child: SessionTimer(
-                        duration: calculateDurationSinceStartTime(
-                            vm.startTime,
-                            vm.duration),
-                        onInterrupt: (event) {
-                          bloc.interrupt(vm, event);
-                        },
-                        onResume: () {
-                          bloc.resume(vm);
-                        },
-                        onComplete: () => bloc.complete(vm),
-                      ),
-                    ),
-                  );
+                debugPrint('updated data ${snapshot.data}');
+                  if (snapshot.hasError) {
+                    return _displayError(snapshot.error);
+                  }
+
+                debugPrint('session screen state: ${snapshot.data?.state}');
+
+                if(SessionState.running == snapshot.data?.state) {
+                  return _sessionPage(context, snapshot.data.session, bloc);
                 }
-                else if(snapshot.hasError){
-                  return Center(
-                    child:Text(snapshot.error.toString(),
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  );
-                }
-                else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
+
+                return Center(child: CircularProgressIndicator());
+              }
             );
           },
         ),
@@ -99,13 +65,13 @@ class SessionScreen extends StatelessWidget {
   }
 
   Future<bool> _onWillPopScope(BuildContext context,
-      SessionViewModel viewModel,
+      Session session,
       Function(bool) onDismiss) async {
     return showDialog(context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('End Your Unplugg Session?'),
-          content: Text('You are close to earning ${viewModel.duration.inMinutes} moments.'),//${model.duration.inMinutes}
+          content: Text('You are close to earning ${session.duration.inMinutes} moments.'),//${model.duration.inMinutes}
           actions: <Widget>[
             FlatButton(
                 onPressed: () async => onDismiss(false),
@@ -121,5 +87,35 @@ class SessionScreen extends StatelessWidget {
     );
   }
 
+  Widget _sessionPage(BuildContext context, Session session, SessionStateBloc bloc) {
+
+    return WillPopScope(
+      onWillPop: () =>
+          _onWillPopScope(context, session, (willCancel) {
+            Navigator.of(context).pop(willCancel);
+            if (willCancel) {
+              // terminate the session
+              _logger.d('User cancelled session');
+              bloc.cancel(session);
+            }
+          },
+          ),
+      child: Center(
+        child: SessionTimer(
+          session: session,
+          bloc: bloc,
+        ),
+      ),
+    );
+  }
+
+  Widget _displayError(error) {
+    return Center(
+      child:Text(
+        error.toString(),
+        style: TextStyle(color: Colors.red),
+      )
+    );
+  }
 }
 

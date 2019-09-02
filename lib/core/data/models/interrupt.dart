@@ -43,6 +43,14 @@ class Interrupt {
 
   @override
   toString() {
-    return toMap().toString();
+    var map = <String, dynamic>{
+      columnSessionFK: session_fk,
+      columnTimeout: timeout.toLocal(),
+      columnCancelled: cancelled,
+    };
+    if (id != null) {
+      map[columnId] = id;
+    }
+    return map.toString();
   }
 }

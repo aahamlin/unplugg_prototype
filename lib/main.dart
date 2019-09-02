@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:logger_flutter/logger_flutter.dart';
 import 'package:unplugg_prototype/core/shared/log_manager.dart';
 import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/provider_setup.dart';
@@ -26,16 +27,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: providers,
-      child:
-        MaterialApp(
-          title: 'Unplugg Prototype',
-          theme: ThemeData(
-            primarySwatch: Colors.green,
-            fontFamily: 'Barista'
-          ),
-          initialRoute: Router.initialRoute,
-          onGenerateRoute: Router.generateRoute,
+      child: MaterialApp(
+        title: 'Unplugg Prototype',
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+          fontFamily: 'Barista'
         ),
+        initialRoute: Router.initialRoute,
+        onGenerateRoute: Router.generateRoute,
+      ),
     );
   }
 }
