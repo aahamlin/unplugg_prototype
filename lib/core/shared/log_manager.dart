@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:logger/logger.dart';
 
 import 'package:unplugg_prototype/core/data/database.dart';
@@ -37,21 +38,14 @@ final _logLevelStr = {
 
 class NamedPrinter extends LogPrinter {
   final String name;
-//  final _dbMgr = DBProvider();
-
   NamedPrinter(this.name);
 
   @override
   void log(LogEvent event) {
     var timeStamp = DateTime.now();
     var msg = '$name|${event.message}';
-    println('[${_logLevelStr[event.level]}] ${timeStamp.toLocal().toIso8601String()} $msg');
-    /*_dbMgr.addLogEntry(LogEntry(
-      level: event.level,
-      message: msg,
-      timeStamp: timeStamp,
-      error: event.error
-    ));*/
+    var time = '${timeStamp.hour}:${timeStamp.minute}:${timeStamp.second}.${timeStamp.millisecond}';
+    println('$time [${_logLevelStr[event.level]}] $msg');
   }
 
 }

@@ -11,6 +11,8 @@ import 'package:unplugg_prototype/core/services/notifications.dart';
 void main() async {
 
   var databaseProvider = DBProvider();
+  LogConsole.init();
+
   var logger = LogManager.getLogger('main');
 
   var notificationManager = NotificationManager();

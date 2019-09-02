@@ -7,11 +7,6 @@ import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/core/data/models/log_entry.dart';
 
 class LogsTab extends StatelessWidget {
-
-  LogsTab({Key key}) : super(key: key) {
-    LogConsole.init();
-  }
-
   @override
   Widget build(BuildContext context) {
     return LogConsole();
