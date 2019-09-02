@@ -69,10 +69,10 @@ void main() {
       sessionStateBloc.cancel(session);
 
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.failed));
-      //verify(dbProvider.endSession(captureThat(isA<Session>()))).called(1);
+          predicate((SessionStateViewModel vm) => vm.state == SessionState.none));
+
       expect(verify(dbProvider.endSession(captureThat(isA<Session>()))).captured.single,
-          predicate((session) => session.result == SessionResult.failure));
+          predicate((session) => session.result == SessionResult.cancelled));
     });
 
     test('complete session, successfull', () async {
