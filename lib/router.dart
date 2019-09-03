@@ -24,16 +24,15 @@ class Router {
   }
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    var vm = settings.arguments;
     switch(settings.name) {
       case RouteNames.HOME:
         return MaterialPageRoute(builder: (context) => HomeScreen());
       case RouteNames.SESSION:
-        return MaterialPageRoute(builder: (context) => SessionScreen(vm: vm));
+        return MaterialPageRoute(builder: (context) => SessionScreen());
       case RouteNames.SUCCESS:
-        return MaterialPageRoute(builder: (context) => CompleteScreen(vm: vm));
+        return MaterialPageRoute(builder: (context) => CompleteScreen());
       case RouteNames.FAILURE:
-        return MaterialPageRoute(builder: (context) => IncompleteScreen(vm: vm));
+        return MaterialPageRoute(builder: (context) => IncompleteScreen());
       default:
         String unknownRoute = settings.name;
         return new MaterialPageRoute(builder: (context) => NotFoundPage(name: unknownRoute));

@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
-
 import '../database_schema.dart';
-import 'interrupt.dart';
 
 enum SessionResult {
   none,
@@ -17,6 +15,7 @@ class Session {
   DateTime startTime;
   SessionResult result;
   String reason;
+  // todo add field to track the DateTime of the result (endSession)
 
   /**
    * Transform Object to Map for Database inserts
@@ -26,7 +25,7 @@ class Session {
     var map = <String, dynamic>{
       columnDuration: duration.inMilliseconds,
       columnStart: startTime.millisecondsSinceEpoch,
-      columnResult: result != null ? describeEnum(result) : null,
+      columnResult: result != SessionResult.none ? describeEnum(result) : null,
       columnReason: reason,
     };
     if (id != null) {
@@ -40,7 +39,7 @@ class Session {
     @required this.duration,
     @required this.startTime,
     this.reason,
-    this.result,
+    this.result = SessionResult.none,
   });
 
   DateTime get endTime => startTime.add(duration);
@@ -62,9 +61,8 @@ class Session {
   toString() {
     var map = <String, dynamic>{
       columnDuration: duration.inMinutes,
-      columnStart: startTime.toLocal(),
-      'endTime': endTime.toLocal(),
-      columnResult: result != null ? describeEnum(result) : null,
+      columnStart: startTime.toLocal().toString(),
+      columnResult: describeEnum(result),
       columnReason: reason,
     };
     if (id != null) {

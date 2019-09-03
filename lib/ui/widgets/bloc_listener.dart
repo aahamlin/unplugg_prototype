@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:logger/logger.dart';
 import 'package:unplugg_prototype/core/bloc/bloc_base.dart';
 import 'package:unplugg_prototype/core/shared/log_manager.dart';
 
@@ -26,6 +27,7 @@ class _BlocListenerState<B extends BlocBase<T>, T>
 
   Logger _logger;
   StreamSubscription<T> _subscription;
+  // todo do we need this at all, unused
   T _previousState;
   B _bloc;
 

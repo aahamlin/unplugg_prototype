@@ -8,7 +8,8 @@ class TimerText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(TimerTextFormatter.format(duration),
-        style: Theme.of(context).textTheme.display1.merge(TextStyle(color: Colors.green))
+        style: Theme.of(context).textTheme.display1
+            .merge(TextStyle(color: Colors.grey[300]))
     );
   }
 }

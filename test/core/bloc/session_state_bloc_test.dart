@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:async/async.dart';
 import 'package:test/test.dart';
@@ -7,7 +6,6 @@ import 'package:mockito/mockito.dart';
 
 import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
-import 'package:unplugg_prototype/viewmodel/session_state_viewmodel.dart';
 import 'package:unplugg_prototype/core/data/models/session.dart';
 import 'package:unplugg_prototype/core/services/notifications.dart';
 
@@ -51,54 +49,48 @@ void main() {
 
 
     test('start session', () async {
-      final StreamQueue<SessionStateViewModel> queue =
-        StreamQueue<SessionStateViewModel>(sessionStateBloc.stream);
+      final StreamQueue<Session> queue =
+        StreamQueue<Session>(sessionStateBloc.stream);
 
       sessionStateBloc.start(duration: Duration(seconds: 15));
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.running));
+          predicate((Session vm) => vm.result == SessionResult.none));
       verify(dbProvider.beginSession(any)).called(1);
 
     });
 
 
     test('cancel session, if running', () async {
-      final StreamQueue<SessionStateViewModel> queue =
-        StreamQueue<SessionStateViewModel>(sessionStateBloc.stream);
+      final StreamQueue<Session> queue =
+        StreamQueue<Session>(sessionStateBloc.stream);
 
       sessionStateBloc.cancel(session);
 
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.none));
-
-      expect(verify(dbProvider.endSession(captureThat(isA<Session>()))).captured.single,
-          predicate((session) => session.result == SessionResult.cancelled));
+          predicate((Session vm) => vm.result == SessionResult.cancelled));
+      verify(dbProvider.endSession(captureThat(isA<Session>()))).called(1);
     });
 
     test('complete session, successfull', () async {
-      final StreamQueue<SessionStateViewModel> queue =
-        StreamQueue<SessionStateViewModel>(sessionStateBloc.stream);
+      final StreamQueue<Session> queue =
+        StreamQueue<Session>(sessionStateBloc.stream);
 
       sessionStateBloc.complete(session);
 
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.succeeded));
-//      verify(dbProvider.endSession(any)).called(1);
-      expect(verify(dbProvider.endSession(captureThat(isA<Session>()))).captured.single,
-          predicate((session) => session.result == SessionResult.success));
+          predicate((Session vm) => vm.result == SessionResult.success));
+      verify(dbProvider.endSession(any)).called(1);
     });
 
     test('fail session', () async {
-      final StreamQueue<SessionStateViewModel> queue =
-        StreamQueue<SessionStateViewModel>(sessionStateBloc.stream);
+      final StreamQueue<Session> queue =
+        StreamQueue<Session>(sessionStateBloc.stream);
 
       sessionStateBloc.fail(session);
 
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.failed));
-//      verify(dbProvider.endSession(any)).called(1);
-      expect(verify(dbProvider.endSession(captureThat(isA<Session>()))).captured.single,
-          predicate((session) => session.result == SessionResult.failure));
+          predicate((Session vm) => vm.result == SessionResult.failure));
+      verify(dbProvider.endSession(any)).called(1);
 
     });
   });
@@ -127,20 +119,20 @@ void main() {
     });
 
     test('resumed session continues', () async {
-      final StreamQueue<SessionStateViewModel> queue =
-        StreamQueue<SessionStateViewModel>(sessionStateBloc.stream);
+      final StreamQueue<Session> queue =
+        StreamQueue<Session>(sessionStateBloc.stream);
 
       await sessionStateBloc.resume(session);
 
       verify(dbProvider.cancelAllInterrupts(argThat(predicate((id)=>id==1)))).called(1);
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.running));
+          predicate((Session vm) => vm.result == SessionResult.none));
     });
 
 
     test('resumed session fails', () async {
-      final StreamQueue<SessionStateViewModel> queue =
-        StreamQueue<SessionStateViewModel>(sessionStateBloc.stream);
+      final StreamQueue<Session> queue =
+        StreamQueue<Session>(sessionStateBloc.stream);
 
       when(dbProvider.isSessionInterrupted(any))
           .thenAnswer((_) => Future.value(true));
@@ -148,7 +140,7 @@ void main() {
       await sessionStateBloc.resume(session);
 
       expect(await queue.next,
-          predicate((SessionStateViewModel vm) => vm.state == SessionState.failed));
+          predicate((Session vm) => vm.result == SessionResult.failure));
       verifyNever(dbProvider.cancelAllInterrupts(any));
 
     });

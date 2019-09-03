@@ -109,7 +109,7 @@ class DBProvider {
 
   Future<void> endSession(Session session) async {
     final db = await database;
-    int count = await db.update(
+    await db.update(
       tableSession, session.toMap(),
       where: '$columnId = ?',
       whereArgs: [session.id]);

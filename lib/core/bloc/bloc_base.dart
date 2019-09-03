@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 
 abstract class BlocBase<T> {
@@ -13,8 +14,8 @@ abstract class BlocBase<T> {
   T get currentState => _state;
 
   void add(T t) {
-    _inSink.add(t);
     _state = t;
+    _inSink.add(t);
   }
 
 

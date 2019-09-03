@@ -1,19 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import '../interrupts.dart';
 import 'bloc_base.dart';
 import 'package:unplugg_prototype/core/shared/log_manager.dart';
 import 'package:unplugg_prototype/core/data/database.dart';
 import 'package:unplugg_prototype/core/data/models/session.dart';
 import 'package:unplugg_prototype/core/data/models/interrupt.dart';
-import 'package:unplugg_prototype/viewmodel/session_state_viewmodel.dart';
 import 'package:unplugg_prototype/core/services/notifications.dart';
 
 /**
  * Moves session through its states: None, Running, Complete, Incomplete
  */
-class SessionStateBloc extends BlocBase<SessionStateViewModel> {
+class SessionStateBloc extends BlocBase<Session> {
 
   final _logger = LogManager.getLogger('SessionStateBloc');
   final DBProvider dbProvider;
@@ -148,30 +146,9 @@ class SessionStateBloc extends BlocBase<SessionStateViewModel> {
 
   Future _emitSessionState(int session_id) async {
     Session session = await dbProvider.getSession(session_id);
-    debugPrint('$session');
-//    List<Interrupt> interrupts = await dbProvider.getSessionInterrupts(session_id);
-//    debugPrint('$interrupts');
-
-    var sessionState = SessionStateViewModel(
-      session: session,
-//      interrupts: interrupts,
-      state: _mapResultToState(session.result),
-    );
-
-    add(sessionState);
+    debugPrint('emit $session');
+    add(session);
   }
 
-  SessionState _mapResultToState(SessionResult result) {
-    switch (result) {
-      case SessionResult.failure:
-        return SessionState.failed;
-      case SessionResult.success:
-        return SessionState.succeeded;
-      case SessionResult.cancelled:
-        return SessionState.none;
-      default:
-        return SessionState.running;
-    }
-  }
 }
 

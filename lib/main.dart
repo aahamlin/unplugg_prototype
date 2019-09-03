@@ -10,6 +10,7 @@ import 'package:unplugg_prototype/core/services/notifications.dart';
 
 void main() async {
 
+  // todo initialize log output to DB
   var databaseProvider = DBProvider();
   LogConsole.init();
 

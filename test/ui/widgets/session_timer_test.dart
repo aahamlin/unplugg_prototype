@@ -5,18 +5,11 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:provider/provider.dart';
 import 'package:unplugg_prototype/core/bloc/session_state_bloc.dart';
 import 'package:unplugg_prototype/core/data/models/session.dart';
-import 'package:unplugg_prototype/core/services/phone_event/phone_event_service.dart';
-
-//import 'package:unplugg_prototype/main.dart';
 import 'package:unplugg_prototype/ui/widgets/session_timer.dart';
 import 'package:unplugg_prototype/ui/widgets/timer_text.dart';
 

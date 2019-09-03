@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:logger/logger.dart';
 import 'package:unplugg_prototype/core/shared/log_manager.dart';
 import 'services/phone_event/phone_event_service.dart';
 
@@ -33,11 +33,6 @@ mixin Interrupts {
   Timer _stateTimer;
 
   Logger _logger = LogManager.getLogger('Interrupt');
-
-//  final Function(InterruptEvent) onInterrupt;
-//  final Function onResume;
-
-//  Interrupts({this.onInterrupt, this.onResume});
 
   void onInterrupt(InterruptEvent event);
   void onResume();

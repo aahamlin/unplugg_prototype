@@ -1,12 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:logger/logger.dart';
 
-import 'package:unplugg_prototype/core/data/database.dart';
-import 'package:unplugg_prototype/core/data/models/log_entry.dart';
-
-
-export 'package:logger/logger.dart';
-
+// todo rewrite logger implementation using static Logger.addOutputListener for DB calls
 class LogManager {
 
   static final Map<String, Logger> _cache = {};
