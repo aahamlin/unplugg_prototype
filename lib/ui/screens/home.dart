@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // todo: display toast from VM when in success or failure state
     return Scaffold(
       appBar: AppBar(
-        title: Text('Unplugg'),
+        title: Text('Unplugg', style: TextStyle(fontFamily: 'Barista')),
       ),
       body: Center(
           child: _widgetOptions.elementAt(_selectedIndex)

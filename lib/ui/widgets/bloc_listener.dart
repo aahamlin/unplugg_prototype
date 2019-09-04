@@ -7,7 +7,7 @@ import 'package:unplugg_prototype/core/shared/log_manager.dart';
 
 typedef BlocWidgetListener = Function(BuildContext, dynamic);
 
-class BlocListener<B extends BlocBase<T>, T> extends StatefulWidget {
+class BlocListener<B extends BlocBase, T> extends StatefulWidget {
 
   final B bloc;
   final BlocWidgetListener listener;
@@ -22,13 +22,13 @@ class BlocListener<B extends BlocBase<T>, T> extends StatefulWidget {
   _BlocListenerState createState() => _BlocListenerState();
 }
 
-class _BlocListenerState<B extends BlocBase<T>, T>
+class _BlocListenerState<B extends BlocBase, T>
     extends State<BlocListener<B, T>> {
 
   Logger _logger;
   StreamSubscription<T> _subscription;
   // todo do we need this at all, unused
-  T _previousState;
+//  T _previousState;
   B _bloc;
 
   @override
@@ -36,7 +36,7 @@ class _BlocListenerState<B extends BlocBase<T>, T>
     super.initState();
     _logger = LogManager.getLogger('BlocListener');
     _bloc = widget.bloc ?? Provider.of<B>(context);
-    _previousState = _bloc?.currentState;
+//    _previousState = _bloc?.currentState;
     _subscribe();
   }
 
@@ -58,7 +58,7 @@ class _BlocListenerState<B extends BlocBase<T>, T>
       if (_subscription != null) {
         _unsubscribe();
         _bloc = widget.bloc ?? Provider.of<B>(context);
-        _previousState = _bloc?.currentState;
+//        _previousState = _bloc?.currentState;
       }
       _subscribe();
     }
@@ -72,11 +72,11 @@ class _BlocListenerState<B extends BlocBase<T>, T>
 
   _subscribe() {
     if (_bloc?.stream != null) {
-      _subscription = _bloc.stream.listen((T event) {
+      _subscription = _bloc.stream.listen((event) {
         // todo: add conditional compare values?
         _logger.d('notifying listeners of $event');
         widget.listener(context, event);
-        _previousState = event;
+//        _previousState = event;
       });
       _logger.d('subscribed');
     }

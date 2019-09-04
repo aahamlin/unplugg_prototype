@@ -14,14 +14,35 @@ import 'package:unplugg_prototype/core/services/notifications.dart';
 class SessionStateBloc extends BlocBase<Session> {
 
   final _logger = LogManager.getLogger('SessionStateBloc');
-  final DBProvider dbProvider;
+  final DBProvider dbProvider = DBProvider();
+  final NotificationManager notificationManager = NotificationManager();
+
+  @visibleForTesting
+  Timer get expirationTimer => _expirationTimer;
+
   Timer _expirationTimer;
-  NotificationManager notificationManager = NotificationManager();
 
+  Duration _expiry;
 
-  SessionStateBloc({this.dbProvider}) {
+  SessionStateBloc({Duration expiry = const Duration(seconds: 10)}) {
+    _expiry = expiry;
     // exit is currently  failure condition
     _failOrphanedSessions();
+  }
+
+  void dispose() {
+    _controller.close();
+  }
+
+  StreamController<Session> _controller = StreamController<Session>.broadcast();
+  Stream<Session> get stream => _controller.stream;
+
+  Session _state;
+  Session get currentState => _state;
+
+  void add(Session session) {
+    _state = session;
+    _controller.sink.add(session);
   }
 
 
@@ -31,6 +52,8 @@ class SessionStateBloc extends BlocBase<Session> {
     var session = await dbProvider.beginSession(
         Session(duration: duration, startTime: DateTime.now()));
 
+    notificationManager.scheduleMomentsEarnedNotification(
+        session.endTime, session.duration.inMinutes);
     _emitSessionState(session.id);
   }
 
@@ -41,6 +64,8 @@ class SessionStateBloc extends BlocBase<Session> {
     session.reason = 'User cancelled';
 
     await dbProvider.endSession(session);
+    notificationManager.cancelMomentsEarnedNotification();
+
     _emitSessionState(session.id);
   }
 
@@ -71,12 +96,12 @@ class SessionStateBloc extends BlocBase<Session> {
       notificationManager.showSessionFailedNotification();
     }
     await dbProvider.endSession(session);
+    notificationManager.cancelMomentsEarnedNotification();
     _emitSessionState(session.id);
   }
 
   Future interrupt(final Session session) async {
-    var expiry = Duration(seconds: 10);
-    var timeout = DateTime.now().add(expiry);
+    var timeout = DateTime.now().add(_expiry);
 
     var interrupt = Interrupt(
         session_fk: session.id,
@@ -87,19 +112,15 @@ class SessionStateBloc extends BlocBase<Session> {
     int count = await dbProvider.getTotalInterruptCount(session.id);
 
     if (count > 1) {
-      session.result = SessionResult.failure;
-      session.reason = 'User interrupted session $count times';
-
-      await dbProvider.endSession(session);
-      notificationManager.showSessionFailedNotification();
+      return fail(session, notify: true);
     }
     else {
       _logger.i('scheduling expiration of session: $session');
-      notificationManager.showSessionInterruptNotification();
-      _expirationTimer = Timer(expiry, () async {
+      notificationManager.scheduleSessionInterruptNotification();
+      _expirationTimer = Timer(_expiry, () async {
         // todo if not resumed then fail session
         _logger.i('session has timed out: $session');
-        fail(session, notify: true);
+        return fail(session, notify: true);
       });
     }
 
@@ -111,7 +132,8 @@ class SessionStateBloc extends BlocBase<Session> {
     if (_expirationTimer != null) {
       _expirationTimer.cancel();
     }
-    _cancelNotifications();
+
+    notificationManager.cancelSessionInterruptedNotification();
 
     var isSessionInterrupted = await dbProvider.isSessionInterrupted(session);
     _logger.i('isSessionInterrupted $isSessionInterrupted');
@@ -124,12 +146,6 @@ class SessionStateBloc extends BlocBase<Session> {
 
     await dbProvider.cancelAllInterrupts(session.id);
     _emitSessionState(session.id);
-  }
-
-
-  _cancelNotifications() {
-    notificationManager.cancelMomentsExpiringNotification();
-    notificationManager.cancelSessionInterruptedNotification();
   }
 
   Future _failOrphanedSessions() async {
@@ -146,7 +162,7 @@ class SessionStateBloc extends BlocBase<Session> {
 
   Future _emitSessionState(int session_id) async {
     Session session = await dbProvider.getSession(session_id);
-    debugPrint('emit $session');
+    debugPrint('EMIT SESSION $session');
     add(session);
   }
 

@@ -177,7 +177,8 @@ class DBProvider {
   Future<List<Session>> getAllSessions() async {
     final db = await database;
 
-    var res = await db.query(tableSession);
+    var res = await db.query(tableSession,
+    orderBy: '$columnStart DESC');
 
     List<Session> list = res.isNotEmpty
         ? res.map((e) => Session.fromMap(e)).toList()

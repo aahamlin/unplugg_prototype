@@ -109,8 +109,10 @@ class _ActionState extends State<ActionTab> {
               child:
                   ImageIcon(AssetImage('assets/logo.png'), color: Colors.green),
               onTap: () async {
-                bloc.start(duration: Duration(minutes: _selectedDuration));
+                debugPrint('NAVIGATE TO SESSION SCREEN');
                 Navigator.pushNamed(context, RouteNames.SESSION);
+                debugPrint('ACTION START SESSION');
+                bloc.start(duration: Duration(minutes: _selectedDuration));
               },
             ),
           ),

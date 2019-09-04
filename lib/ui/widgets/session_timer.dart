@@ -29,9 +29,6 @@ class _SessionTimerState extends State<SessionTimer>
   Stopwatch _stopwatch;
   PhoneEventService _phoneEventService;
   StreamSubscription<PhoneState> _subscription;
-  bool _paused = false;
-//  Interrupts _interrupts;
-//  SessionStateBloc _bloc;
 
   @override
   void initState() {
@@ -39,11 +36,6 @@ class _SessionTimerState extends State<SessionTimer>
     _timer = Timer.periodic(new Duration(seconds: 1), callback);
     _stopwatch = Stopwatch();
     _stopwatch.start();
-//    _bloc = Provider.of<SessionStateBloc>(context);
-//    _interrupts = Interrupts(
-//      onInterrupt: widget.onInterrupt,
-//      onResume: widget.onResume
-//    );
     _phoneEventService = PhoneEventService();
     _subscription =
         _phoneEventService.onPhoneStateChanged.listen(this.addPhoneEventState);
@@ -64,7 +56,6 @@ class _SessionTimerState extends State<SessionTimer>
     if (timeRemaining.isNegative) {
       _timer.cancel();
       _stopwatch.stop();
-//      widget.onComplete();
       widget.bloc.complete(widget.session);
     }
     setState(() {});
@@ -77,18 +68,12 @@ class _SessionTimerState extends State<SessionTimer>
 
   @override
   Widget build(BuildContext context) {
-    return _paused ? Text('--.--:--') : TimerText(duration: timeRemaining);
+    return TimerText(duration: timeRemaining);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     this.addAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed ||
-        state == AppLifecycleState.paused) {
-      setState(() {
-        _paused = !_paused;
-      });
-    }
   }
 
   @override
@@ -103,7 +88,7 @@ class _SessionTimerState extends State<SessionTimer>
 
   @override
   void onResume() {
-    setState(() {});
     widget.bloc.resume(widget.session);
+    setState(() {});
   }
 }

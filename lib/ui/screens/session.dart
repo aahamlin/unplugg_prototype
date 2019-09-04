@@ -17,6 +17,7 @@ class SessionScreen extends StatelessWidget {
   SessionScreen({Key key}) : super(key: key);
 
   @override Widget build(BuildContext context) {
+    debugPrint("BUILDING SESSION SCREEN");
     final SessionStateBloc bloc = Provider.of<SessionStateBloc>(context);
     return BlocListener(
       bloc: bloc,
@@ -32,7 +33,7 @@ class SessionScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text('Session'),
         ),
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.green[400],
         body: Consumer<SessionStateBloc>(
           builder: (context, bloc, child) {
           return StreamBuilder<Session>(

@@ -28,13 +28,16 @@ class MyApp extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+
     return MultiProvider(
       providers: providers,
       child: MaterialApp(
         title: 'Unplugg Prototype',
         theme: ThemeData(
           primarySwatch: Colors.green,
-          fontFamily: 'Barista'
+          appBarTheme: AppBarTheme.of(context)
+              .copyWith(textTheme: TextTheme(
+              title: TextStyle(fontFamily: 'Barista', fontSize: 24.0)))
         ),
         initialRoute: Router.initialRoute,
         onGenerateRoute: Router.generateRoute,
