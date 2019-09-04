@@ -38,7 +38,10 @@ class NamedPrinter extends LogPrinter {
   void log(LogEvent event) {
     var timeStamp = DateTime.now();
     var msg = '$name|${event.message}';
-    var time = '${timeStamp.hour}:${timeStamp.minute}:${timeStamp.second}.${timeStamp.millisecond}';
+    String hoursStr = '${timeStamp.hour}'.padLeft(2, '0');
+    String minutesStr = '${timeStamp.minute}'.padLeft(2, '0');
+    String secondsStr = '${timeStamp.second}'.padLeft(2, '0');
+    var time = '$hoursStr:$minutesStr:$secondsStr.${timeStamp.millisecond}';
     println('$time [${_logLevelStr[event.level]}] $msg');
   }
 

@@ -145,6 +145,10 @@ class NotificationManager {
   }
 
   Future<void> scheduleMomentsEarnedNotification(DateTime scheduledTime, int points) async {
+    _logger.d('Schedule moments earned notification at $scheduledTime');
+
+    final momentsEarned = 'Congratulations! You earned $points moments.';
+
     var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
         'unplugg_prototype_channel_id', 'unplugg_prototype_channel',
         'Unplugg Prototype Notifications',
@@ -155,7 +159,7 @@ class NotificationManager {
     await flutterLocalNotificationsPlugin.schedule(
       MOMENTS_EARNED_ID,
       'Unplugg Moments Earned',
-      'Congratulations! You earned $points moments.',
+      momentsEarned,
       scheduledTime,
       platformChannelSpecifics,
       //payload: jsonEncode(sessionNotificationDetails.toJson()),

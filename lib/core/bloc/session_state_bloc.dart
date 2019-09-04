@@ -78,7 +78,7 @@ class SessionStateBloc extends BlocBase<Session> {
     if (isSessionInterrupted) {
       return fail(session);
     }
-
+    // todo: complete with app in foreground, cancel success notification
     session.result = SessionResult.success;
     session.reason = 'Success';
     await dbProvider.endSession(session);

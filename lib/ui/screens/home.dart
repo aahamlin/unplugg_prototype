@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
 
   int _selectedIndex = 1;
-  static const TextStyle _optionStyle = TextStyle(fontWeight: FontWeight.bold);
+  static const TextStyle _optionStyle = TextStyle(fontWeight: FontWeight.normal);
 
   static List<Widget> _widgetOptions = <Widget>[
     SessionsTab(),
